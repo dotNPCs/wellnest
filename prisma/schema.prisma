@@ -99,13 +99,12 @@ model UserPet {
     userId    String
     petTypeId String
 
-    name            String?
-    currentStatus   String?
-    statusUpdatedAt DateTime?
-    happiness       Float     @default(10.0) // 0-100
-    currentMood     PetMood   @default(NEUTRAL)
-    isInFarm        Boolean   @default(false)
-    isActive        Boolean   @default(true)
+    name String?
+
+    happiness   Float   @default(10.0) // 0-100
+    currentMood PetMood @default(NEUTRAL)
+    isInFarm    Boolean @default(false)
+    isActive    Boolean @default(true)
 
     // Pet stats
     feedingStreak     Int @default(0)
@@ -134,11 +133,13 @@ enum PetMood {
 }
 
 model PetMoodLog {
-    id        String   @id @default(cuid())
+    id        String  @id @default(cuid())
     petId     String
+    status    String? // Optional status message from the pet
     mood      PetMood
     happiness Float
-    trigger   String? // What caused the mood change
+    trigger   String?
+
     createdAt DateTime @default(now())
 
     pet UserPet @relation(fields: [petId], references: [id], onDelete: Cascade)
