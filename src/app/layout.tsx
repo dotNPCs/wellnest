@@ -2,6 +2,7 @@ import "@/styles/globals.css";
 
 import { type Metadata } from "next";
 import { Geist } from "next/font/google";
+import localFont from "next/font/local";
 
 import { TRPCReactProvider } from "@/trpc/react";
 
@@ -16,11 +17,31 @@ const geist = Geist({
   variable: "--font-geist-sans",
 });
 
+const pixelMix = localFont({
+  src: [
+    {
+      path: "../../public/fonts/pixelmix.ttf",
+      weight: "400",
+      style: "normal",
+    },
+
+    {
+      path: "../../public/fonts/pixelmix_bold.ttf",
+      weight: "700",
+      style: "normal",
+    },
+  ],
+  variable: "--font-pixelmix",
+  display: "swap",
+  preload: true,
+  fallback: ["sans-serif"],
+});
+
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`${geist.variable}`}>
+    <html lang="en" className={`${pixelMix.variable} ${geist.variable}`}>
       <body>
         <TRPCReactProvider>{children}</TRPCReactProvider>
       </body>

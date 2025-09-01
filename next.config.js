@@ -5,6 +5,10 @@
 import "./src/env.js";
 
 /** @type {import("next").NextConfig} */
-const config = {};
+const config = {
+      images: {
+    unoptimized: true, // Prevents Next.js from optimizing pixel art
+  },
+};
 
 export default config;
