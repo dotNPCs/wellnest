@@ -1,5 +1,6 @@
 "use client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import WeeklyCalendar from "@/components/Calendar/WeeklyCalendar";
 
 const DrawerContent = () => {
   return (
@@ -27,7 +28,9 @@ const DrawerContent = () => {
         </TabsTrigger>
       </TabsList>
 
-      <TabsContent value="diary">diary</TabsContent>
+      <TabsContent value="diary">
+          <WeeklyCalendar />
+      </TabsContent>
       <TabsContent value="activities">activities</TabsContent>
       <TabsContent value="farm">farm</TabsContent>
     </Tabs>
