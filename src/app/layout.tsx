@@ -1,7 +1,7 @@
 import "@/styles/globals.css";
 
 import { type Metadata } from "next";
-import { Geist } from "next/font/google";
+import { Geist, Jersey_20 } from "next/font/google";
 import localFont from "next/font/local";
 
 import { TRPCReactProvider } from "@/trpc/react";
@@ -15,6 +15,13 @@ export const metadata: Metadata = {
 const geist = Geist({
   subsets: ["latin"],
   variable: "--font-geist-sans",
+});
+
+const jersey20 = Jersey_20({
+  subsets: ["latin"],
+  weight: ["400"],
+  variable: "--font-jersey-20",
+  display: "swap",
 });
 
 const pixelMix = localFont({
@@ -41,9 +48,26 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`${pixelMix.variable} ${geist.variable}`}>
-      <body>
-        <TRPCReactProvider>{children}</TRPCReactProvider>
+    <html
+      lang="en"
+      className={`${pixelMix.variable} ${geist.variable} ${jersey20.variable}`}
+    >
+      <head>
+        <meta
+          name="viewport"
+          content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+        />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta
+          name="apple-mobile-web-app-status-bar-style"
+          content="black-translucent"
+        />
+      </head>
+      <body className="w-full overflow-x-hidden">
+        <div className="mx-auto flex min-h-screen w-full max-w-[768px] flex-col bg-white md:border-2 md:border-black">
+          <TRPCReactProvider>{children}</TRPCReactProvider>
+        </div>
       </body>
     </html>
   );

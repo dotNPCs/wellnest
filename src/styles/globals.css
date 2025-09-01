@@ -1,12 +1,27 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+@font-face {
+  font-family: "publicmix";
+  src: url("/public/fonts/pixelmix.ttf") format("ttf");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+
 @custom-variant dark (&:is(.dark *));
 
 @theme {
   --font-sans:
     var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif,
     "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  --font-pixelmix: 
+    "publicmix", ui-sans-serif, system-ui, sans-serif,
+    "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+
+  --font-pixel: 
+  var(--font-pixelmix);
 }
 
 body {
@@ -26,6 +41,10 @@ body {
 }
 
 @theme inline {
+
+  --color-brand-background:
+    var(--brand-background);
+  --radius:
   --radius-sm:
     calc(var(--radius) - 4px);
   --radius-md:
@@ -99,6 +118,7 @@ body {
 }
 
 :root {
+  --brand-background: rgba(245, 240, 205, 1);
   --radius:
     0.625rem;
   --background:
@@ -114,7 +134,7 @@ body {
   --popover-foreground:
     oklch(0.145 0 0);
   --primary:
-    oklch(0.205 0 0);
+   rgba(54, 116, 181, 1);
   --primary-foreground:
     oklch(0.985 0 0);
   --secondary:
@@ -166,6 +186,7 @@ body {
 }
 
 .dark {
+    --brand-background: rgba(245, 240, 205, 1);
   --background:
     oklch(0.145 0 0);
   --foreground:
