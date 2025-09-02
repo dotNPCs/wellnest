@@ -28,11 +28,15 @@ const WeeklyCalendar = () => {
 
   const moods = [
     { emoji: "😊", label: "Happy" },
-    { emoji: "😢", label: "Sad" },
-    { emoji: "😠", label: "Angry" },
-    { emoji: "😴", label: "Tired" },
-    { emoji: "😎", label: "Cool" },
-    { emoji: "😰", label: "Anxious" }
+    { emoji: "😐", label: "Neutral" },
+    { emoji: "🙂", label: "Content" },
+    { emoji: "🤩", label: "Excited" },
+    { emoji: "😩", label: "Stressed" },
+    { emoji: "🙏", label: "Grateful" },
+    { emoji: "😌", label: "Calm" },
+    { emoji: "😰", label: "Anxious" },
+    { emoji: "😃", label: "Energetic" },
+    { emoji: "😴", label: "Tired" }
   ];
 
   const nextWeek = () => {
@@ -294,7 +298,7 @@ const WeeklyCalendar = () => {
                       }`}
                     >
                       <div className="text-2xl">{mood.emoji}</div>
-                      <div className="text-xs mt-1 font-medium">{mood.label}</div>
+                      <div className="text-[8px] mt-1 font-medium">{mood.label}</div>
                     </button>
                   ))}
                 </div>
