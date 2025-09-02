@@ -28,7 +28,7 @@ const DrawerContent = () => {
         </TabsTrigger>
       </TabsList>
 
-      <TabsContent value="diary">
+      <TabsContent value="diary" >
           <WeeklyCalendar />
       </TabsContent>
       <TabsContent value="activities">activities</TabsContent>
