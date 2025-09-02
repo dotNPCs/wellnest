@@ -65,20 +65,17 @@ const WeeklyCalendar = () => {
     }
     return '';
   };
+
   const getDateKey = (date: Date): string => {
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, "0");
-      const day = String(date.getDate()).padStart(2, "0");
-      return `${year}-${month}-${day}`;
-};
-
-
-
-
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
 
   const cycleMood = (dayKey: string) => {
     setMoodStates((prev) => {
-      const currentMoodIndex = prev[dayKey] || -1;
+      const currentMoodIndex = prev[dayKey] ?? -1;
       const nextMoodIndex = (currentMoodIndex + 1) % moods.length;
       return {
         ...prev,
@@ -136,13 +133,12 @@ const WeeklyCalendar = () => {
             const today = isToday(day);
             const dayKey = getDateKey(day);
             const moodIndex = moodStates[dayKey];
-            const hasMood = moodIndex !== undefined && moodIndex >= 0;
 
             return (
               <div key={day.toString()} className="flex-shrink-0 w-32">
                 <div
-                  className={`p-4 rounded-xl text-center shadow-md transition-transform transform origin-center 
-                    ${today ? "border-2 border-blue-500 ring-2 ring-blue-300 bg-blue-50 text-black" : "bg-white text-slate-700"}  
+                  className={`p-0 rounded-xl text-center shadow-md transition-transform transform origin-center 
+                    ${today ? "border-0 border-blue-500 ring-2 ring-blue-300 bg-blue-50 text-black" : "bg-white text-slate-700"}  
                     hover:bg-blue-100`}
                 >
                   <div className="font-medium">{formatDate(day, "EEE")}</div>
@@ -154,7 +150,7 @@ const WeeklyCalendar = () => {
                   {today ? (
                     <button
                       onClick={() => setShowDiaryInput(true)}
-                      className="w-10 h-10 rounded-full bg-green-500 border-2 border-green-600 text-white text-2xl font-bold hover:bg-green-600 hover:scale-110 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-green-300 shadow-md"
+                      className="w-15 h-15 rounded-full bg-green-500 border-2 border-green-600 text-white text-2xl font-bold hover:bg-green-600 hover:scale-110 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-green-300 shadow-md"
                     >
                       +
                     </button>
@@ -166,13 +162,12 @@ const WeeklyCalendar = () => {
                       return isPast ? (
                         <button
                           onClick={() => cycleMood(dayKey)}
-                          className="w-10 h-10 rounded-full border-2 bg-white border-gray-300 hover:border-blue-400 hover:scale-110 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-300 shadow-md flex items-center justify-center text-lg"
+                          className="w-15 h-15 rounded-full border-2 bg-white border-gray-300 hover:border-blue-400 hover:scale-110 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-300 shadow-md flex items-center justify-center text-lg"
                         >
-                          {moods[moodIndex ?? -1]?.emoji ?? "😐"}
-
+                          {moods[moodIndex ?? 0]?.emoji ?? "😐"}
                         </button>
                       ) : (
-                        <div className="w-10 h-10 rounded-full border-2 border-gray-200 bg-gray-50 flex items-center justify-center">
+                        <div className="w-15 h-15 rounded-full border-2 border-gray-200 bg-gray-50 flex items-center justify-center">
                         </div>
                       );
                     })()
