@@ -101,10 +101,11 @@ model UserPet {
 
     name String?
 
-    happiness   Float   @default(10.0) // 0-100
-    currentMood PetMood @default(NEUTRAL)
-    isInFarm    Boolean @default(false)
-    isActive    Boolean @default(true)
+    happiness   Float    @default(10.0) // 0-100
+    currentMood UserMood @default(NEUTRAL)
+    isInFarm    Boolean  @default(false)
+    isActive    Boolean  @default(true)
+    hasLeft     Boolean  @default(false)
 
     // Pet stats
     feedingStreak     Int @default(0)
@@ -123,22 +124,14 @@ model UserPet {
     @@index([userId, isActive])
 }
 
-enum PetMood {
-    VERY_SAD
-    SAD
-    NEUTRAL
-    HAPPY
-    VERY_HAPPY
-    EXCITED
-}
-
 model PetMoodLog {
-    id        String  @id @default(cuid())
+    id        String   @id @default(cuid())
     petId     String
     status    String? // Optional status message from the pet
-    mood      PetMood
+    mood      UserMood
     happiness Float
     trigger   String?
+    dialogue  String?
 
     createdAt DateTime @default(now())
 
