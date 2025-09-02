@@ -4,8 +4,8 @@ import type { PetRarity, UserMood } from "@prisma/client";
 
 export const petRouter = createTRPCRouter({
   // Get current user's active pets
-  getCurrentUserPets: protectedProcedure.query(async ({ ctx }) => {
-    const pets = await ctx.db.userPet.findMany({
+  getCurrentUserPet: protectedProcedure.query(async ({ ctx }) => {
+    const pet = await ctx.db.userPet.findFirst({
       where: {
         userId: ctx.session.user.id,
         isActive: true,
@@ -24,7 +24,7 @@ export const petRouter = createTRPCRouter({
       orderBy: { adoptedAt: "desc" },
     });
 
-    return pets;
+    return pet;
   }),
 
   // Get current pet mood for a specific pet
@@ -69,65 +69,75 @@ export const petRouter = createTRPCRouter({
     }),
 
   // Create new pet
-  createNewPet: protectedProcedure
-    .input(
-      z.object({
-        petTypeId: z.string().cuid(),
-        name: z.string().min(1).max(50).optional(),
-        isInFarm: z.boolean().default(false),
-      }),
-    )
-    .mutation(async ({ ctx, input }) => {
-      // Verify pet type exists
-      const petType = await ctx.db.petType.findUnique({
-        where: { id: input.petTypeId },
-      });
+  createNewPet: protectedProcedure.mutation(async ({ ctx }) => {
+    try {
+      // Get a random pet type
+      const randomPetTypes = await ctx.db.$queryRaw<
+        { id: string; name: string }[]
+      >`SELECT * FROM "PetType" ORDER BY RANDOM() LIMIT 1`;
 
-      if (!petType) {
-        throw new Error("Pet type not found");
+      if (!randomPetTypes || randomPetTypes.length === 0) {
+        throw new Error("No pet types available in database");
       }
 
-      // Create the pet with initial mood log and persona
-      const result = await ctx.db.$transaction(async (tx) => {
-        // Create the pet
-        const newPet = await tx.userPet.create({
-          data: {
-            userId: ctx.session.user.id,
-            petTypeId: input.petTypeId,
-            name: input.name,
-            happiness: 20.0, // Start with neutral happiness
-            currentMood: "NEUTRAL",
-          },
-          include: {
-            petType: true,
-          },
-        });
+      const randomPetType = randomPetTypes[0];
 
+      if (!randomPetType) {
+        throw new Error("Failed to select a random pet type");
+      }
+
+      // Create the pet first
+      const newPet = await ctx.db.userPet.create({
+        data: {
+          userId: ctx.session.user.id,
+          petTypeId: randomPetType.id,
+          name: randomPetType.name,
+          happiness: 20.0,
+          currentMood: "NEUTRAL",
+        },
+        include: {
+          petType: true,
+        },
+      });
+
+      // Create related records (these will rollback manually if any fail)
+      try {
         // Create initial mood log
-        const initialMoodLog = await tx.petMoodLog.create({
+        const initialMoodLog = await ctx.db.petMoodLog.create({
           data: {
             petId: newPet.id,
             mood: "NEUTRAL",
             happiness: 20.0,
-            status: "Hoping to see if I could find a loving home!",
+            status: "Hoping to find a loving home!",
             trigger: "ADOPTION",
           },
         });
 
         // Create initial persona
-        const initialPersona = await tx.userPetPersona.create({
+        const initialPersona = await ctx.db.userPetPersona.create({
           data: {
             petId: newPet.id,
-            personaJson: {},
+            personaJson: {
+              cheerful: 5.0,
+              calm: 5.0,
+              playful: 5.0,
+              empathetic: 5.0,
+              shy: 5.0,
+              quirky: 5.0,
+              description:
+                "A newly adopted pet with balanced personality traits",
+              confidence: 1.0,
+              trigger: "Initial adoption personality assessment",
+            },
           },
         });
 
         // Award adoption points to user
-        await tx.user.update({
+        await ctx.db.user.update({
           where: { id: ctx.session.user.id },
           data: {
             totalPoints: {
-              increment: 50, // Adoption bonus
+              increment: 50,
             },
           },
         });
@@ -137,11 +147,23 @@ export const petRouter = createTRPCRouter({
           initialMoodLog,
           initialPersona,
         };
-      });
+      } catch (relatedError) {
+        // If any related record creation fails, delete the pet to maintain consistency
+        await ctx.db.userPet.delete({
+          where: { id: newPet.id },
+        });
+        throw relatedError;
+      }
+    } catch (error) {
+      console.error("Error creating new pet:", error);
 
-      return result;
-    }),
+      if (error instanceof Error) {
+        throw new Error(`Failed to create pet: ${error.message}`);
+      }
 
+      throw new Error("An unexpected error occurred while creating the pet");
+    }
+  }),
   // Get available pet types for adoption
   getAvailablePetTypes: protectedProcedure.query(async ({ ctx }) => {
     const petTypes = await ctx.db.petType.findMany({
