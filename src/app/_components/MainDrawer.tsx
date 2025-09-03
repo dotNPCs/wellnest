@@ -1,5 +1,6 @@
 "use client";
 
+import { api } from "@/trpc/react";
 import React, { useState, useRef, useEffect } from "react";
 
 interface CustomDrawerProps {
@@ -23,6 +24,8 @@ export default function CustomDrawer({
 
   const minHeight = 42; // 50% minimum
   const [maxHeight, setMaxHeight] = useState<number>(100);
+
+  const todayStatus = api.checkin.getTodayStatus.useQuery();
 
   useEffect(() => {
     if (typeof window !== "undefined") {

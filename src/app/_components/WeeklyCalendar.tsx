@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 interface DiaryEntry {
   id: string;
@@ -17,14 +17,17 @@ const WeeklyCalendar = () => {
     return new Date(today.setDate(diff));
   });
 
-  // Track mood states for each day
   const [moodStates, setMoodStates] = useState<{ [key: string]: number }>({});
-  // Track diary entries - now storing arrays of entries per day
-  const [diaryEntries, setDiaryEntries] = useState<{ [key: string]: DiaryEntry[] }>({});
+
+  const [diaryEntries, setDiaryEntries] = useState<{
+    [key: string]: DiaryEntry[];
+  }>({});
   const [showDiaryInput, setShowDiaryInput] = useState(false);
   const [currentDiaryText, setCurrentDiaryText] = useState("");
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  const [selectedMoodIndex, setSelectedMoodIndex] = useState<number | null>(null);
+  const [selectedMoodIndex, setSelectedMoodIndex] = useState<number | null>(
+    null,
+  );
 
   const moods = [
     { emoji: "😊", label: "Happy" },
@@ -32,7 +35,7 @@ const WeeklyCalendar = () => {
     { emoji: "😠", label: "Angry" },
     { emoji: "😴", label: "Tired" },
     { emoji: "😎", label: "Cool" },
-    { emoji: "😰", label: "Anxious" }
+    { emoji: "😰", label: "Anxious" },
   ];
 
   const nextWeek = () => {
@@ -64,22 +67,22 @@ const WeeklyCalendar = () => {
 
   const formatDate = (date: Date, format: string): string => {
     if (format === "EEE") {
-      return date.toLocaleDateString('en', { weekday: 'short' });
+      return date.toLocaleDateString("en", { weekday: "short" });
     }
     if (format === "dd") {
-      return date.getDate().toString().padStart(2, '0');
+      return date.getDate().toString().padStart(2, "0");
     }
     if (format === "MMM dd") {
-      return date.toLocaleDateString('en', { month: 'short', day: '2-digit' });
+      return date.toLocaleDateString("en", { month: "short", day: "2-digit" });
     }
-    return '';
+    return "";
   };
 
   const formatTime = (date: Date): string => {
-    return date.toLocaleTimeString('en', {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: true
+    return date.toLocaleTimeString("en", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
     });
   };
 
@@ -102,19 +105,19 @@ const WeeklyCalendar = () => {
     const newEntry: DiaryEntry = {
       id: `${Date.now()}-${Math.random()}`,
       text: currentDiaryText.trim(),
-      timestamp: new Date()
+      timestamp: new Date(),
     };
 
     setDiaryEntries((prev) => ({
       ...prev,
-      [dateKey]: [...(prev[dateKey] || []), newEntry]
+      [dateKey]: [...(prev[dateKey] || []), newEntry],
     }));
 
     // Set the mood for today if one was selected
     if (selectedMoodIndex !== null) {
       setMoodStates((prev) => ({
         ...prev,
-        [dateKey]: selectedMoodIndex
+        [dateKey]: selectedMoodIndex,
       }));
     }
 
@@ -129,7 +132,10 @@ const WeeklyCalendar = () => {
     return diaryEntries[dateKey] || [];
   };
 
-  const getAllEntriesSorted = (): { dateKey: string; entries: DiaryEntry[] }[] => {
+  const getAllEntriesSorted = (): {
+    dateKey: string;
+    entries: DiaryEntry[];
+  }[] => {
     return Object.entries(diaryEntries)
       .filter(([_, entries]) => entries.length > 0)
       .sort(([a], [b]) => new Date(b).getTime() - new Date(a).getTime())
@@ -141,26 +147,27 @@ const WeeklyCalendar = () => {
   weekEndDate.setDate(weekEndDate.getDate() + 6);
 
   return (
-    <div className="rounded-xl min-h-screen bg-gradient-to-b from-purple-100 via-pink-50 to-yellow-50">
-      <div className="w-full p-2 flex flex-col items-center">
+    <div className="min-h-screen rounded-xl bg-gradient-to-b from-purple-100 via-pink-50 to-yellow-50">
+      <div className="flex w-full flex-col items-center p-2">
         {/* Navigation - Compact for mobile */}
-        <div className="flex justify-between items-center mb-3 w-full px-2">
+        <div className="mb-3 flex w-full items-center justify-between px-2">
           <button
             onClick={prevWeek}
-            className="w-8 h-8 flex items-center justify-center bg-gradient-to-r from-purple-400 to-pink-400 text-white rounded-full shadow-md hover:shadow-lg hover:scale-110 transition-all"
+            className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-r from-purple-400 to-pink-400 text-white shadow-md transition-all hover:scale-110 hover:shadow-lg"
           >
-            <ChevronLeft className="w-4 h-4" />
+            <ChevronLeft className="h-4 w-4" />
           </button>
 
-          <div className="font-semibold text-sm text-purple-800">
-            {formatDate(currentWeekStart, "MMM dd")} - {formatDate(weekEndDate, "MMM dd")}
+          <div className="text-sm font-semibold text-purple-800">
+            {formatDate(currentWeekStart, "MMM dd")} -{" "}
+            {formatDate(weekEndDate, "MMM dd")}
           </div>
 
           <button
             onClick={nextWeek}
-            className="w-8 h-8 flex items-center justify-center bg-gradient-to-r from-pink-400 to-purple-400 text-white rounded-full shadow-md hover:shadow-lg hover:scale-110 transition-all"
+            className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-r from-pink-400 to-purple-400 text-white shadow-md transition-all hover:scale-110 hover:shadow-lg"
           >
-            <ChevronRight className="w-4 h-4" />
+            <ChevronRight className="h-4 w-4" />
           </button>
         </div>
 
@@ -172,16 +179,22 @@ const WeeklyCalendar = () => {
 
           if (todayMood !== undefined && moods[todayMood]) {
             return (
-              <div className="w-full px-2 mb-3">
-                <div className="bg-gradient-to-r from-yellow-100 to-orange-100 rounded-lg shadow-sm p-3 flex items-center justify-between border-2 border-orange-200">
+              <div className="mb-3 w-full px-2">
+                <div className="flex items-center justify-between rounded-lg border-2 border-orange-200 bg-gradient-to-r from-yellow-100 to-orange-100 p-3 shadow-sm">
                   <div className="flex items-center gap-2">
-                    <span className="text-sm text-orange-700 font-medium">Today's vibe:</span>
-                    <span className="text-2xl animate-bounce">{moods[todayMood].emoji}</span>
-                    <span className="text-sm font-bold text-orange-600">{moods[todayMood].label}</span>
+                    <span className="text-sm font-medium text-orange-700">
+                      Today's vibe:
+                    </span>
+                    <span className="animate-bounce text-2xl">
+                      {moods[todayMood].emoji}
+                    </span>
+                    <span className="text-sm font-bold text-orange-600">
+                      {moods[todayMood].label}
+                    </span>
                   </div>
                   <button
                     onClick={() => openDiaryInput(today)}
-                    className="text-xs bg-gradient-to-r from-orange-400 to-pink-400 text-white px-3 py-1 rounded-full hover:shadow-md hover:scale-105 transition-all font-medium"
+                    className="rounded-full bg-gradient-to-r from-orange-400 to-pink-400 px-3 py-1 text-xs font-medium text-white transition-all hover:scale-105 hover:shadow-md"
                   >
                     Add Entry
                   </button>
@@ -195,7 +208,7 @@ const WeeklyCalendar = () => {
         {/* Days Grid - Optimized for iPhone SE width */}
         <div className="w-full px-2">
           <div className="grid grid-cols-7 gap-1">
-            {days.map(day => {
+            {days.map((day) => {
               const today = isToday(day);
               const dayKey = getDateKey(day);
               const moodIndex = moodStates[dayKey];
@@ -203,12 +216,13 @@ const WeeklyCalendar = () => {
               const hasEntries = dayEntries.length > 0;
 
               return (
-                <div key={day.toString()} className="flex flex-col items-center">
+                <div
+                  key={day.toString()}
+                  className="flex flex-col items-center"
+                >
                   {/* Day Card - Smaller for mobile */}
                   <div
-                    className={`w-full p-1 rounded-lg text-center shadow-sm transition-transform 
-                      ${today ? "ring-2 ring-purple-400 bg-gradient-to-b from-purple-100 to-pink-100" : "bg-white"}  
-                      hover:scale-105 hover:shadow-md`}
+                    className={`w-full rounded-lg p-1 text-center shadow-sm transition-transform ${today ? "bg-gradient-to-b from-purple-100 to-pink-100 ring-2 ring-purple-400" : "bg-white"} hover:scale-105 hover:shadow-md`}
                   >
                     <div className="text-xs font-medium text-purple-600">
                       {formatDate(day, "EEE").substring(0, 3)}
@@ -219,17 +233,17 @@ const WeeklyCalendar = () => {
                   </div>
 
                   {/* Mood/Action Button - Smaller for mobile */}
-                  <div className="mt-2 relative">
+                  <div className="relative mt-2">
                     {today ? (
                       <>
                         {moodStates[dayKey] !== undefined ? (
-                          <div className="w-10 h-10 rounded-full bg-gradient-to-r from-yellow-200 to-orange-200 border-2 border-orange-300 flex items-center justify-center text-base shadow-md">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-orange-300 bg-gradient-to-r from-yellow-200 to-orange-200 text-base shadow-md">
                             {moods[moodStates[dayKey]]?.emoji}
                           </div>
                         ) : (
                           <button
                             onClick={() => openDiaryInput(day)}
-                            className="w-10 h-10 rounded-full bg-gradient-to-r from-green-400 to-emerald-400 text-white text-lg font-bold hover:from-green-500 hover:to-emerald-500 hover:scale-110 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-green-300 shadow-md flex items-center justify-center"
+                            className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-r from-green-400 to-emerald-400 text-lg font-bold text-white shadow-md transition-all duration-200 hover:scale-110 hover:from-green-500 hover:to-emerald-500 focus:ring-2 focus:ring-green-300 focus:outline-none"
                           >
                             +
                           </button>
@@ -241,19 +255,18 @@ const WeeklyCalendar = () => {
                         const isPast = day < now && !today;
 
                         return isPast ? (
-                          <div className="w-10 h-10 rounded-full border-2 bg-gradient-to-b from-white to-purple-50 border-purple-200 flex items-center justify-center text-base shadow-sm">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-purple-200 bg-gradient-to-b from-white to-purple-50 text-base shadow-sm">
                             {moods[moodIndex ?? 0]?.emoji ?? "😐"}
                           </div>
                         ) : (
-                          <div className="w-10 h-10 rounded-full border-2 border-gray-200 bg-gradient-to-b from-gray-50 to-gray-100">
-                          </div>
+                          <div className="h-10 w-10 rounded-full border-2 border-gray-200 bg-gradient-to-b from-gray-50 to-gray-100"></div>
                         );
                       })()
                     )}
 
                     {/* Entry count indicator */}
                     {hasEntries && (
-                      <div className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-r from-pink-400 to-purple-400 text-white text-xs rounded-full flex items-center justify-center font-bold shadow-sm">
+                      <div className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-gradient-to-r from-pink-400 to-purple-400 text-xs font-bold text-white shadow-sm">
                         {dayEntries.length}
                       </div>
                     )}
@@ -266,35 +279,40 @@ const WeeklyCalendar = () => {
 
         {/* Diary Input Modal */}
         {showDiaryInput && selectedDate && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-gradient-to-b from-white to-purple-50 rounded-2xl p-4 w-full max-w-sm border-2 border-purple-200 shadow-xl">
-              <h3 className="text-base font-bold mb-1 text-purple-700">
-                Add Entry - {selectedDate.toLocaleDateString('en', {
-                  weekday: 'short',
-                  month: 'short',
-                  day: 'numeric'
+          <div className="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black p-4">
+            <div className="w-full max-w-sm rounded-2xl border-2 border-purple-200 bg-gradient-to-b from-white to-purple-50 p-4 shadow-xl">
+              <h3 className="mb-1 text-base font-bold text-purple-700">
+                Add Entry -{" "}
+                {selectedDate.toLocaleDateString("en", {
+                  weekday: "short",
+                  month: "short",
+                  day: "numeric",
                 })}
               </h3>
-              <p className="text-xs text-purple-500 mb-3">
+              <p className="mb-3 text-xs text-purple-500">
                 {formatTime(new Date())}
               </p>
 
               {/* Mood Selection */}
               <div className="mb-3">
-                <p className="text-sm text-purple-600 font-medium mb-2">How are you feeling?</p>
+                <p className="mb-2 text-sm font-medium text-purple-600">
+                  How are you feeling?
+                </p>
                 <div className="grid grid-cols-6 gap-2">
                   {moods.map((mood, index) => (
                     <button
                       key={index}
                       onClick={() => setSelectedMoodIndex(index)}
-                      className={`p-2 rounded-lg transition-all ${
-                        selectedMoodIndex === index 
-                          ? 'bg-gradient-to-r from-yellow-200 to-orange-200 ring-2 ring-orange-400 scale-110 shadow-md' 
-                          : 'bg-purple-50 hover:bg-purple-100'
+                      className={`rounded-lg p-2 transition-all ${
+                        selectedMoodIndex === index
+                          ? "scale-110 bg-gradient-to-r from-yellow-200 to-orange-200 shadow-md ring-2 ring-orange-400"
+                          : "bg-purple-50 hover:bg-purple-100"
                       }`}
                     >
                       <div className="text-2xl">{mood.emoji}</div>
-                      <div className="text-xs mt-1 font-medium">{mood.label}</div>
+                      <div className="mt-1 text-xs font-medium">
+                        {mood.label}
+                      </div>
                     </button>
                   ))}
                 </div>
@@ -303,11 +321,21 @@ const WeeklyCalendar = () => {
               {/* Show existing entries for this day */}
               {getEntriesForDay(selectedDate).length > 0 && (
                 <div className="mb-3 max-h-32 overflow-y-auto border-t-2 border-purple-200 pt-2">
-                  <p className="text-xs text-purple-600 mb-1 font-medium">Today's entries:</p>
+                  <p className="mb-1 text-xs font-medium text-purple-600">
+                    Today's entries:
+                  </p>
                   {getEntriesForDay(selectedDate).map((entry) => (
-                    <div key={entry.id} className="text-xs bg-gradient-to-r from-purple-50 to-pink-50 p-2 rounded mb-1">
-                      <span className="font-bold text-purple-700">{formatTime(entry.timestamp)}</span>
-                      <span className="text-purple-600 ml-2">{entry.text.substring(0, 50)}{entry.text.length > 50 ? '...' : ''}</span>
+                    <div
+                      key={entry.id}
+                      className="mb-1 rounded bg-gradient-to-r from-purple-50 to-pink-50 p-2 text-xs"
+                    >
+                      <span className="font-bold text-purple-700">
+                        {formatTime(entry.timestamp)}
+                      </span>
+                      <span className="ml-2 text-purple-600">
+                        {entry.text.substring(0, 50)}
+                        {entry.text.length > 50 ? "..." : ""}
+                      </span>
                     </div>
                   ))}
                 </div>
@@ -317,13 +345,13 @@ const WeeklyCalendar = () => {
                 value={currentDiaryText}
                 onChange={(e) => setCurrentDiaryText(e.target.value)}
                 placeholder="How was your day? ✨"
-                className="w-full h-24 p-2 text-sm border-2 border-purple-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent bg-white"
+                className="h-24 w-full resize-none rounded-lg border-2 border-purple-200 bg-white p-2 text-sm focus:border-transparent focus:ring-2 focus:ring-purple-400 focus:outline-none"
                 autoFocus
               />
-              <div className="flex gap-2 mt-3">
+              <div className="mt-3 flex gap-2">
                 <button
                   onClick={addDiaryEntry}
-                  className="flex-1 bg-gradient-to-r from-purple-400 to-pink-400 text-white py-2 px-3 text-sm rounded-lg hover:from-purple-500 hover:to-pink-500 transition-all font-bold shadow-md"
+                  className="flex-1 rounded-lg bg-gradient-to-r from-purple-400 to-pink-400 px-3 py-2 text-sm font-bold text-white shadow-md transition-all hover:from-purple-500 hover:to-pink-500"
                 >
                   Save
                 </button>
@@ -334,7 +362,7 @@ const WeeklyCalendar = () => {
                     setSelectedDate(null);
                     setSelectedMoodIndex(null);
                   }}
-                  className="flex-1 bg-gradient-to-r from-gray-200 to-gray-300 text-gray-700 py-2 px-3 text-sm rounded-lg hover:from-gray-300 hover:to-gray-400 transition-all font-bold"
+                  className="flex-1 rounded-lg bg-gradient-to-r from-gray-200 to-gray-300 px-3 py-2 text-sm font-bold text-gray-700 transition-all hover:from-gray-300 hover:to-gray-400"
                 >
                   Cancel
                 </button>
@@ -346,30 +374,41 @@ const WeeklyCalendar = () => {
         {/* Diary Entries Display - Mobile optimized */}
         {getAllEntriesSorted().length > 0 && (
           <div className="mt-6 w-full px-2 pb-4">
-            <h3 className="text-lg font-bold mb-3 text-purple-700">Your Journey 🌟</h3>
-            <div className="space-y-3 max-h-64 overflow-y-auto">
+            <h3 className="mb-3 text-lg font-bold text-purple-700">
+              Your Journey 🌟
+            </h3>
+            <div className="max-h-64 space-y-3 overflow-y-auto">
               {getAllEntriesSorted().map(({ dateKey, entries }) => {
                 const entryDate = new Date(dateKey);
                 return (
-                  <div key={dateKey} className="bg-white rounded-xl shadow-md overflow-hidden border-2 border-purple-100">
+                  <div
+                    key={dateKey}
+                    className="overflow-hidden rounded-xl border-2 border-purple-100 bg-white shadow-md"
+                  >
                     <div className="bg-gradient-to-r from-purple-200 to-pink-200 px-3 py-2">
                       <div className="text-sm font-bold text-purple-700">
-                        {entryDate.toLocaleDateString('en', {
-                          weekday: 'long',
-                          month: 'short',
-                          day: 'numeric'
+                        {entryDate.toLocaleDateString("en", {
+                          weekday: "long",
+                          month: "short",
+                          day: "numeric",
                         })}
                       </div>
                     </div>
-                    <div className="p-3 space-y-2">
+                    <div className="space-y-2 p-3">
                       {entries
-                        .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
+                        .sort(
+                          (a, b) =>
+                            b.timestamp.getTime() - a.timestamp.getTime(),
+                        )
                         .map((entry) => (
-                          <div key={entry.id} className="border-l-4 border-pink-300 pl-3 bg-purple-50 rounded-r">
-                            <div className="text-xs text-purple-500 mb-1 font-medium">
+                          <div
+                            key={entry.id}
+                            className="rounded-r border-l-4 border-pink-300 bg-purple-50 pl-3"
+                          >
+                            <div className="mb-1 text-xs font-medium text-purple-500">
                               {formatTime(entry.timestamp)}
                             </div>
-                            <div className="text-sm text-purple-700 whitespace-pre-wrap">
+                            <div className="text-sm whitespace-pre-wrap text-purple-700">
                               {entry.text}
                             </div>
                           </div>

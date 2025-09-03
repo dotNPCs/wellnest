@@ -119,7 +119,7 @@ const PetWrapper = () => {
           <div className="absolute right-8 bottom-8 z-50 flex items-center">
             {/* Status box that expands to the left */}
             <div
-              className={`font-pixel mr-2 rounded-md bg-white p-4 text-sm text-black transition-all duration-300 ease-in-out ${
+              className={`font-pixel z-8 mr-2 overflow-hidden rounded-md bg-white p-4 text-sm text-black transition-all duration-300 ease-in-out ${
                 showMoodStatus
                   ? "w-80 translate-x-0 opacity-100"
                   : "w-0 translate-x-full overflow-hidden opacity-0"
@@ -131,7 +131,7 @@ const PetWrapper = () => {
             {/* Emoji button */}
             <button
               onClick={() => setShowMoodStatus(!showMoodStatus)}
-              className="flex h-12 w-12 items-center justify-center rounded-full bg-white text-2xl shadow-lg transition-transform duration-200 hover:scale-110 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              className="z-9 flex h-12 w-12 items-center justify-center rounded-full bg-white text-2xl shadow-lg transition-transform duration-200 hover:scale-110 focus:ring-2 focus:ring-blue-500 focus:outline-none"
               aria-label="Toggle mood status"
             >
               {getMoodEmoji(pet.moodLogs[0]?.status)}
