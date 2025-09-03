@@ -1,5 +1,6 @@
 "use client";
 
+import { api } from "@/trpc/react";
 import React, { useState, useRef, useEffect } from "react";
 
 interface CustomDrawerProps {
@@ -15,14 +16,16 @@ export default function CustomDrawer({
   allowDragUp = false,
   className = "",
 }: CustomDrawerProps) {
-  const [height, setHeight] = useState<number>(50); // Start at 50% height
+  const [height, setHeight] = useState<number>(42); // Start at 50% height
   const [isDragging, setIsDragging] = useState<boolean>(false);
   const [startY, setStartY] = useState<number>(0);
-  const [startHeight, setStartHeight] = useState<number>(50);
+  const [startHeight, setStartHeight] = useState<number>(42);
   const drawerRef = useRef<HTMLDivElement>(null);
 
-  const minHeight = 50; // 50% minimum
+  const minHeight = 42; // 50% minimum
   const [maxHeight, setMaxHeight] = useState<number>(100);
+
+  const todayStatus = api.checkin.getTodayStatus.useQuery();
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -122,7 +125,7 @@ export default function CustomDrawer({
       className={`fixed right-0 bottom-0 left-0 z-50 rounded-t-xl border-t border-gray-200 bg-white shadow-lg transition-all duration-200 dark:border-gray-700 dark:bg-gray-900 ${className}`}
       style={{
         height: `${height}vh`,
-        minHeight: "50vh",
+        minHeight: "40vh",
         maxHeight: allowDragUp ? "900px" : "50vh",
       }}
     >
