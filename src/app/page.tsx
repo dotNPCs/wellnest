@@ -9,6 +9,10 @@ import DrawerContent from "./_components/Homescreen/DrawerContent";
 export default async function Home() {
   const session = await auth();
 
+  if (!session?.user) {
+    return <main className="flex min-h-screen bg-white"></main>;
+  }
+
   return (
     <HydrateClient>
       <main className="min-h-screen overflow-hidden bg-black">

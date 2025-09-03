@@ -6,8 +6,13 @@ import { useEffect, useRef, useState } from "react";
 import { api } from "@/trpc/react";
 import { set } from "zod";
 import CreatePetModal from "./CreatePetModal";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 const PetWrapper = () => {
+  const { data: session, status } = useSession();
+  const router = useRouter();
+
   const { pet, isLoading, refetch } = usePet();
   const hasTriedCreateRef = useRef(false);
   const [showNewPetModal, setShowNewPetModal] = useState(false);
@@ -24,35 +29,27 @@ const PetWrapper = () => {
     },
   });
 
+  useEffect(() => {
+    if (status === "unauthenticated" || !session?.user) {
+      router.push("/api/auth/signin");
+      return;
+    }
+  }, []);
+
   // Auto-create pet if none exists - RUNS ONLY ONCE
   useEffect(() => {
     if (
       !isLoading &&
       !pet &&
       !hasTriedCreateRef.current &&
-      !createPetMutation.isPending
+      !createPetMutation.isPending &&
+      status === "authenticated"
     ) {
       console.log("No pet found, auto-creating...");
       hasTriedCreateRef.current = true; // Mark as attempted
       createPetMutation.mutate();
     }
   }, [isLoading, pet, createPetMutation]);
-
-  //   if (isLoading) {
-  //     return (
-  //       <div className="flex h-[60vh] w-full items-center justify-center bg-gray-100 text-center">
-  //         <div>Loading pet...</div>
-  //       </div>
-  //     );
-  //   }
-
-  //   if (createPetMutation.isPending) {
-  //     return (
-  //       <div className="flex h-[60vh] w-full items-center justify-center bg-blue-100 text-center">
-  //         <div>Creating your new pet...</div>
-  //       </div>
-  //     );
-  //   }
 
   return (
     <div className="flex h-[60vh] w-full flex-col items-center justify-center bg-green-500 text-center text-white">
