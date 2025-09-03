@@ -6,6 +6,41 @@ import {
 } from "@/server/api/trpc";
 import { TRPCError } from "@trpc/server";
 
+import { GoogleGenAI } from "@google/genai";
+import { text } from "stream/consumers";
+const ai = new GoogleGenAI({
+  apiKey: process.env.GEMINI_API_KEY,
+});
+const config = {};
+const model = "gemma-3-27b-it";
+const contents = [
+  {
+    role: "user",
+    parts: [
+      {
+        text: `
+        This is who you are.
+
+        "hard_text":{"I am a cat, I heal mentally throughout the day, I want to improve overall mood/metal health of user, I am a reflection of my user"},
+        "core_personality":"concerned, cute, clingy, fierce when angry",
+
+        Based on the above context, I want you to respond to the question below:
+        `,
+      },
+    ],
+  },
+  {
+    role: "user",
+    parts: [
+      {
+        text: `
+        Based on the above context, I want you to respond to the question below:
+        `,
+      },
+    ],
+  },
+];
+
 export const LLMRouter = createTRPCRouter({
   ping: publicProcedure.query(() => {
     return "pong!";
@@ -26,9 +61,15 @@ export const LLMRouter = createTRPCRouter({
       }),
     )
     .query(async ({ ctx, input }) => {
-      console.log(input.message);
-      const response = "HELLO";
+      const response = await ai.models.generateContent({
+        model,
+        config,
+        contents: [
+          ...contents,
+          { role: "user", parts: [{ text: input.message }] },
+        ],
+      });
 
-      return response;
+      return response.text;
     }),
 });
