@@ -8,6 +8,8 @@ import { TRPCReactProvider } from "@/trpc/react";
 import { Suspense } from "react";
 import SplashScreen from "./_components/SplashScreen";
 import ClientLayout from "./_components/ClientLayout";
+import { SessionProvider } from "next-auth/react";
+import { auth } from "@/server/auth";
 
 const geist = Geist({
   subsets: ["latin"],
@@ -81,9 +83,10 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  const session = await auth(); // TODO: Replace with actual session retrieval logic
   return (
     <html
       lang="en"
@@ -104,8 +107,10 @@ export default function RootLayout({
       <body className="w-full overflow-x-hidden">
         <div className="mx-auto flex min-h-screen w-full max-w-[768px] flex-col bg-white md:border-2 md:border-black">
           <TRPCReactProvider>
-            {" "}
-            <ClientLayout>{children}</ClientLayout>
+            <SessionProvider session={session}>
+              {" "}
+              <ClientLayout>{children}</ClientLayout>
+            </SessionProvider>
           </TRPCReactProvider>
         </div>
       </body>

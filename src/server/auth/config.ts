@@ -59,4 +59,7 @@ export const authConfig = {
       return baseUrl;
     },
   },
+  pages: {
+    signIn: "/auth/signin",
+  },
 } satisfies NextAuthConfig;
