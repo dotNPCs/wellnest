@@ -36,6 +36,7 @@ export default function ClientLayout({ children }: ClientLayoutProps) {
   useEffect(() => {
     if (!isPetLoading) {
       console.log("Pet fetch complete:", pet ? "Pet found" : "No pet found");
+      console.log("Pet data:", pet);
       setLoading(false);
     }
   }, [isPetLoading, pet]);

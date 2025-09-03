@@ -3,14 +3,26 @@
 
 import { createContext, useContext } from "react";
 
-import { type UserPet } from "@prisma/client";
+import {
+  type UserPet,
+  type PetMoodLog,
+  type UserPetPersona,
+} from "@prisma/client";
+
+interface ExtraPetData {
+  moodLogs?: PetMoodLog[];
+  personas?: UserPetPersona[];
+
+  // add whatever else you need
+}
+
+export type Pet = UserPet & ExtraPetData;
 
 interface PetContextType {
-  pet: UserPet | null;
+  pet: Pet | null;
   isLoading: boolean;
   refetch: () => void;
 }
-
 const PetContext = createContext<PetContextType | undefined>(undefined);
 
 export const usePet = () => {
