@@ -6,7 +6,7 @@ const Layout = async () => {
   const pet = await api.llm.findFirstPet();
 
   return (
-    <div className="p-4">
+    <div className="p-4 h-screen">
       <Page pet={pet} />
     </div>
   );

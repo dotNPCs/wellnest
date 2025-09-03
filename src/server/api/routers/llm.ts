@@ -4,6 +4,7 @@ import {
   protectedProcedure,
   publicProcedure,
 } from "@/server/api/trpc";
+import { TRPCError } from "@trpc/server";
 
 export const LLMRouter = createTRPCRouter({
   ping: publicProcedure.query(() => {
@@ -18,4 +19,16 @@ export const LLMRouter = createTRPCRouter({
 
     return pet;
   }),
+  chat: protectedProcedure
+    .input(
+      z.object({
+        message: z.string().nonempty(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      console.log(input.message);
+      const response = "HELLO";
+
+      return response;
+    }),
 });
