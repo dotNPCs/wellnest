@@ -175,32 +175,18 @@ useEffect(() => {
 
       const dateKey = getDateKey(selectedDate);
 
-      // Filter out any suspicious characters
-      const sanitizedText = currentDiaryText
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#x27;")
-      .replace(/\//g, "&#x2F;")
-      .trim();
-
-
-
       const newEntry: DiaryEntry = {
-          id: crypto.randomUUID(),
-          text: sanitizedText,
-          timestamp: new Date(),
-          moodIndex: selectedMoodIndex ?? undefined, // 👈 store selected mood
+        id: crypto.randomUUID(),
+        text: currentDiaryText.trim(), // store raw text
+        timestamp: new Date(),
+        moodIndex: selectedMoodIndex ?? undefined,
       };
-
 
       setDiaryEntries(prev => ({
         ...prev,
         [dateKey]: [...(prev[dateKey] || []), newEntry],
       }));
 
-      // Set the mood for today if one was selected
       if (selectedMoodIndex !== null) {
         setMoodStates(prev => ({
           ...prev,
@@ -208,12 +194,12 @@ useEffect(() => {
         }));
       }
 
-      // Reset modal state
       setCurrentDiaryText("");
       setShowDiaryInput(false);
       setSelectedDate(null);
       setSelectedMoodIndex(null);
   };
+
 
 
 

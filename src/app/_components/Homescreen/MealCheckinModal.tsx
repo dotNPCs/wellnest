@@ -3,14 +3,6 @@ import { MEAL_CONFIG } from "@/lib/utils";
 import { MealType } from "@prisma/client";
 import { api } from "@/trpc/react";
 
-function sanitizeInput(str: string): string {
-  return str
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
-}
 
 interface MealCheckinModalProps {
   isOpen: boolean;
@@ -48,15 +40,15 @@ const MealCheckinModal: React.FC<MealCheckinModalProps> = ({
   });
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
+      e.preventDefault();
+      setIsSubmitting(true);
 
-    createCheckin.mutate({
+      createCheckin.mutate({
         mealType,
         rating,
-        notes: notes.trim() ? sanitizeInput(notes.trim()) : undefined, // sanitize here
+        notes: notes.trim() || undefined, // no HTML escaping needed
         date: new Date(),
-    });
+      });
   };
 
   if (!isOpen) return null;
