@@ -61,7 +61,7 @@ export default function MeditationPage() {
 
             <button
                 className="absolute top-4 left-4 px-4 py-2 rounded-full bg-white/20 backdrop-blur-md border border-white/30 shadow text-white font-semibold hover:bg-white/30 transition z-20"
-                onClick={() => router.push("/activities")}
+                onClick={() => router.push("/?tab=activities")}
             >
                 ←
             </button>

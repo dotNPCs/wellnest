@@ -1,10 +1,15 @@
 "use client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import WeeklyCalendar from "@/app/_components/WeeklyCalendar";
+import ActivitiesList from "../ActivitiesList";
+import { useSearchParams } from "next/navigation";
 
 const DrawerContent = () => {
+  const searchParams = useSearchParams();
+  const tab = searchParams.get("tab") as "diary" | "activities" | "farm" | null;
+  
   return (
-    <Tabs defaultValue="diary" className="w-full">
+    <Tabs defaultValue={tab ?? "diary"} className="w-full">
       <TabsList className="font-pixel mx-auto mb-4 flex bg-transparent">
         <TabsTrigger
           value="diary"
@@ -29,9 +34,13 @@ const DrawerContent = () => {
       </TabsList>
 
       <TabsContent value="diary" >
-          <WeeklyCalendar />
+        <WeeklyCalendar />
       </TabsContent>
-      <TabsContent value="activities">activities</TabsContent>
+      <TabsContent value="activities">
+        <ActivitiesList onNavigate={function (screen: "home" | "meditation"): void {
+          throw new Error("Function not implemented.");
+        } } />
+      </TabsContent>
       <TabsContent value="farm">farm</TabsContent>
     </Tabs>
   );
