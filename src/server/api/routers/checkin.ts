@@ -1,8 +1,91 @@
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc";
 import { MealType } from "@prisma/client";
+import { addDays, isSameDay, differenceInCalendarDays } from "date-fns";
+import { HAPPINESS_CONFIG, getNextMeal } from "@/lib/points";
 
 export const checkinRouter = createTRPCRouter({
+  createCheckInToApp: protectedProcedure.mutation(async ({ ctx }) => {
+    const userId = ctx.session.user.id;
+
+    const lastCheckin = await ctx.db.userCheckIn.findFirst({
+      where: { userId },
+      orderBy: { createdAt: "desc" },
+    });
+
+    const today = new Date();
+
+    if (lastCheckin && isSameDay(lastCheckin.createdAt, today)) {
+      // Already checked in today
+      return lastCheckin;
+    }
+
+    let newStreak = 1;
+
+    if (lastCheckin) {
+      const daysDiff = differenceInCalendarDays(today, lastCheckin.createdAt);
+
+      if (daysDiff === 1) {
+        // Consecutive day → increment streak
+        const userStreak = await ctx.db.user.findUnique({
+          where: { id: userId },
+          select: { streakCount: true },
+        });
+
+        if (!userStreak) {
+          throw new Error("User not found");
+        }
+        newStreak = userStreak.streakCount + 1;
+
+        if (newStreak > 1) {
+          const updateUserPetFamiliarity = ctx.db.userPet.updateMany({
+            where: { userId, isActive: true },
+            data: {
+              familiarity: {
+                increment:
+                  HAPPINESS_CONFIG.actions.checkin + Math.min(newStreak, 3), // Cap bonus from streak at 10
+              },
+            },
+          });
+        }
+      } else {
+        if (daysDiff > 1) {
+          const pet = await ctx.db.userPet.findFirst({
+            where: { userId, isActive: true },
+            select: { id: true, familiarity: true },
+          });
+          if (!pet) {
+            throw new Error("No active pet found");
+          }
+          const decayAmount = daysDiff * HAPPINESS_CONFIG.decayPerDay;
+          const updateUserPetFamiliarity = ctx.db.userPet.updateMany({
+            where: { userId, isActive: true },
+            data: {
+              familiarity: {
+                decrement: Math.max(pet.familiarity - decayAmount, 10),
+              },
+            },
+          });
+        }
+      }
+    }
+    // Update user's streakCount
+    await ctx.db.user.update({
+      where: { id: userId },
+      data: { streakCount: newStreak },
+    });
+
+    // Add new checkin row
+    const newCheckIn = await ctx.db.userCheckIn.create({
+      data: {
+        userId,
+        createdAt: today,
+      },
+    });
+
+    return newCheckIn;
+  }),
+
   // Get check-in status for a specific date
   getCheckinStatus: protectedProcedure
     .input(
@@ -211,4 +294,80 @@ export const checkinRouter = createTRPCRouter({
       isFullyCompleted: completedMeals.size === 3,
     };
   }),
+
+  create: protectedProcedure
+    .input(
+      z.object({
+        mealType: z.nativeEnum(MealType),
+        rating: z.number().min(1).max(5),
+        notes: z.string().optional(),
+        date: z.date(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const userId = ctx.session.user.id;
+
+      // Find last checkin
+      const lastCheckin = await ctx.db.dailyCheckin.findFirst({
+        where: { userId },
+        orderBy: { createdAt: "desc" },
+      });
+
+      // Get the user's active pet
+      const activePet = await ctx.db.userPet.findFirst({
+        where: { userId, isActive: true },
+        select: { id: true, feedingStreak: true },
+      });
+
+      if (!activePet) {
+        throw new Error("No active pet found");
+      }
+
+      let newStreak = 1;
+
+      if (lastCheckin) {
+        const expectedNext = getNextMeal(lastCheckin.mealType);
+
+        const lastDateKey = lastCheckin.date.toISOString().split("T")[0];
+        const currentDateKey = input.date.toISOString().split("T")[0];
+
+        if (
+          input.mealType === expectedNext &&
+          currentDateKey !== undefined &&
+          lastDateKey !== undefined &&
+          (currentDateKey === lastDateKey ||
+            new Date(currentDateKey) > new Date(lastDateKey))
+        ) {
+          newStreak = activePet.feedingStreak + 1;
+        }
+      }
+
+      // Update streak + happiness
+      await ctx.db.userPet.update({
+        where: { id: activePet.id },
+        data: {
+          feedingStreak: newStreak,
+          familiarity: {
+            increment:
+              HAPPINESS_CONFIG.actions.checkin + Math.min(newStreak, 10),
+          },
+        },
+      });
+
+      // Create checkin
+      const newCheckin = await ctx.db.dailyCheckin.create({
+        data: {
+          userId,
+          mealType: input.mealType,
+          rating: input.rating,
+          notes: input.notes,
+          date: input.date,
+        },
+      });
+
+      return {
+        ...newCheckin,
+        feedingStreak: newStreak,
+      };
+    }),
 });

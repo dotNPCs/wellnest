@@ -2,6 +2,7 @@
 
 import { api } from "@/trpc/react";
 import React, { useState, useRef, useEffect } from "react";
+import MealCheckinHandler from "./Homescreen/MealCheckinHandler";
 
 interface CustomDrawerProps {
   children: React.ReactNode;
@@ -141,7 +142,11 @@ export default function CustomDrawer({
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-auto p-4">{children}</div>
+      <div className="flex-1 overflow-auto p-4">
+        <MealCheckinHandler />
+
+        {children}
+      </div>
     </div>
   );
 }
