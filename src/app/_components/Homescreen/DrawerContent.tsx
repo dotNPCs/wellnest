@@ -7,7 +7,7 @@ import { useSearchParams } from "next/navigation";
 const DrawerContent = () => {
   const searchParams = useSearchParams();
   const tab = searchParams.get("tab") as "diary" | "activities" | "farm" | null;
-  
+
   return (
     <Tabs defaultValue={tab ?? "diary"} className="w-full">
       <TabsList className="font-pixel mx-auto mb-4 flex bg-transparent">
@@ -33,15 +33,28 @@ const DrawerContent = () => {
         </TabsTrigger>
       </TabsList>
 
-      <TabsContent value="diary" >
-        <WeeklyCalendar />
+      <TabsContent value="diary">
+        <div className="max-h-[calc(100vh-6rem)] overflow-y-auto scrollbar-hidden">
+          <WeeklyCalendar />
+        </div>
       </TabsContent>
+
       <TabsContent value="activities">
-        <ActivitiesList onNavigate={function (screen: "home" | "meditation"): void {
-          throw new Error("Function not implemented.");
-        } } />
+        <div className="max-h-[calc(100vh-6rem)] overflow-y-auto scrollbar-hidden">
+          <ActivitiesList
+            onNavigate={function (screen: "home" | "meditation"): void {
+              throw new Error("Function not implemented.");
+            }}
+          />
+        </div>
       </TabsContent>
-      <TabsContent value="farm">farm</TabsContent>
+
+      <TabsContent value="farm">
+        <div className="max-h-[calc(100vh-6rem)] overflow-y-auto scrollbar-hidden">
+          farm
+        </div>
+      </TabsContent>
+
     </Tabs>
   );
 };
