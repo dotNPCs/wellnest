@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc";
 import { MealType } from "@prisma/client";
+import { create } from "domain";
 
 export const checkinRouter = createTRPCRouter({
   // Get check-in status for a specific date
@@ -211,4 +212,25 @@ export const checkinRouter = createTRPCRouter({
       isFullyCompleted: completedMeals.size === 3,
     };
   }),
+
+  create: protectedProcedure
+    .input(
+      z.object({
+        mealType: z.nativeEnum(MealType),
+        rating: z.number().min(1).max(5),
+        notes: z.string().optional(),
+        date: z.date(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      return ctx.db.dailyCheckin.create({
+        data: {
+          userId: ctx.session.user.id,
+          mealType: input.mealType,
+          rating: input.rating,
+          notes: input.notes,
+          date: input.date,
+        },
+      });
+    }),
 });

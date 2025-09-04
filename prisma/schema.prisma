@@ -246,6 +246,7 @@ enum ActivityType {
     EXERCISE
     MINDFULNESS
     GRATITUDE
+    CHECKIN
 }
 
 enum NotificationType {
