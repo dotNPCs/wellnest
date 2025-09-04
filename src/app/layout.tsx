@@ -10,6 +10,7 @@ import SplashScreen from "./_components/SplashScreen";
 import ClientLayout from "./_components/ClientLayout";
 import { SessionProvider } from "next-auth/react";
 import { auth } from "@/server/auth";
+import { redirect } from "next/navigation";
 
 const geist = Geist({
   subsets: ["latin"],
@@ -87,6 +88,7 @@ export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   const session = await auth(); // TODO: Replace with actual session retrieval logic
+  if (!session) return redirect("/login");
   return (
     <html
       lang="en"
