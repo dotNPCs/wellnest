@@ -8,6 +8,59 @@ import { set } from "zod";
 import CreatePetModal from "./CreatePetModal";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
+
+// Typewriter component with blinking cursor
+const TypewriterText = ({
+  text,
+  speed = 50,
+}: {
+  text: string;
+  speed?: number;
+}) => {
+  const [displayedText, setDisplayedText] = useState("");
+  const [isComplete, setIsComplete] = useState(false);
+  const [showCursor, setShowCursor] = useState(true);
+
+  useEffect(() => {
+    setDisplayedText("");
+    setIsComplete(false);
+    setShowCursor(true);
+
+    let index = 0;
+    const timer = setInterval(() => {
+      if (index < text.length) {
+        setDisplayedText(text.slice(0, index + 1));
+        index++;
+      } else {
+        setIsComplete(true);
+        clearInterval(timer);
+      }
+    }, speed);
+
+    return () => clearInterval(timer);
+  }, [text, speed]);
+
+  // Blinking cursor effect
+  useEffect(() => {
+    const cursorTimer = setInterval(() => {
+      setShowCursor((prev) => !prev);
+    }, 500);
+
+    return () => clearInterval(cursorTimer);
+  }, []);
+
+  return (
+    <div className="font-pixel text-left text-xs text-black">
+      {displayedText}
+      <motion.span
+        animate={{ opacity: showCursor ? 1 : 0 }}
+        transition={{ duration: 0 }}
+        className="ml-1 inline-block h-4 w-[0.1rem] bg-black"
+      />
+    </div>
+  );
+};
 
 const PetWrapper = () => {
   const { data: session, status } = useSession();
@@ -17,6 +70,7 @@ const PetWrapper = () => {
   const hasTriedCreateRef = useRef(false);
   const [showNewPetModal, setShowNewPetModal] = useState(false);
   const [showMoodStatus, setShowMoodStatus] = useState(false);
+  const [currentDialogue, setCurrentDialogue] = useState<string>("");
 
   // Auto-create pet mutation
   const createPetMutation = api.pet.createNewPet.useMutation({
@@ -29,6 +83,8 @@ const PetWrapper = () => {
       console.error("Error creating pet:", error);
     },
   });
+
+  const userCheckInToAppMutation = api.checkin.createCheckInToApp.useMutation();
 
   useEffect(() => {
     if (status === "unauthenticated" || !session?.user) {
@@ -49,8 +105,21 @@ const PetWrapper = () => {
       console.log("No pet found, auto-creating...");
       hasTriedCreateRef.current = true; // Mark as attempted
       createPetMutation.mutate();
+      userCheckInToAppMutation.mutate();
     }
   }, [isLoading, pet, createPetMutation]);
+
+  useEffect(() => {
+    console.log("Pet data updated:", pet ? "Pet found" : "No pet found");
+    console.log("Pet data:", pet);
+  }, [pet]);
+
+  // Update current dialogue when pet data changes
+  useEffect(() => {
+    if (pet?.moodLogs?.[0]?.dialogue) {
+      setCurrentDialogue(pet.moodLogs[0].dialogue);
+    }
+  }, [pet?.moodLogs]);
 
   // Function to get mood emoji based on status
   const getMoodEmoji = (status: string) => {
@@ -105,7 +174,7 @@ const PetWrapper = () => {
       />
 
       {pet && (
-        <div className="font-pixel absolute fixed top-10 left-1/2 w-1/2 -translate-x-1/2 font-bold whitespace-nowrap text-white text-shadow-sm">
+        <div className="font-pixel fixed top-10 left-1/2 w-1/2 -translate-x-1/2 font-bold whitespace-nowrap text-white text-shadow-sm">
           <p>
             DAY {getDaysSinceCreation(pet.adoptedAt)} | {getCurrentTime()}{" "}
           </p>
@@ -116,28 +185,48 @@ const PetWrapper = () => {
         pet.moodLogs &&
         pet.moodLogs.length > 0 &&
         pet.moodLogs[0]?.status && (
-          <div className="absolute right-8 bottom-8 z-50 flex items-center">
+          <div className="absolute top-20 right-4 z-50 flex h-10 items-center justify-end">
             {/* Status box that expands to the left */}
             <div
-              className={`font-pixel z-8 mr-2 overflow-hidden rounded-md bg-white p-4 text-sm text-black transition-all duration-300 ease-in-out ${
+              className={`font-pixel z-8 mr-2 line-clamp-2 max-h-12 overflow-hidden rounded-md bg-white p-2 text-black transition-all duration-300 ease-in-out ${
                 showMoodStatus
-                  ? "w-80 translate-x-0 opacity-100"
+                  ? "w-4/5 translate-x-0 opacity-100"
                   : "w-0 translate-x-full overflow-hidden opacity-0"
               }`}
             >
-              <div className="whitespace-nowrap">{pet.moodLogs[0]?.status}</div>
+              <div className="text-left text-[0.65rem]">
+                {pet.moodLogs[0]?.status}
+              </div>
             </div>
 
             {/* Emoji button */}
             <button
               onClick={() => setShowMoodStatus(!showMoodStatus)}
-              className="z-9 flex h-12 w-12 items-center justify-center rounded-full bg-white text-2xl shadow-lg transition-transform duration-200 hover:scale-110 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              className="z-9 flex h-10 w-10 items-center justify-center rounded-full bg-white text-xl shadow-lg transition-transform duration-200 hover:scale-110 focus:ring-2 focus:ring-blue-500 focus:outline-none"
               aria-label="Toggle mood status"
             >
               {getMoodEmoji(pet.moodLogs[0]?.status)}
             </button>
           </div>
         )}
+
+      <AnimatePresence>
+        {pet &&
+          pet.moodLogs &&
+          pet.moodLogs.length > 0 &&
+          pet.moodLogs[0]?.dialogue && (
+            <motion.div
+              key={currentDialogue} // Key ensures re-animation when dialogue changes
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 20 }}
+              transition={{ duration: 0.3 }}
+              className="absolute bottom-8 left-1/2 z-50 mx-auto flex h-auto min-h-10 w-11/12 -translate-x-1/2 items-center rounded-sm border-black bg-white p-2 px-4"
+            >
+              <TypewriterText text={currentDialogue} speed={30} />
+            </motion.div>
+          )}
+      </AnimatePresence>
     </div>
   );
 };

@@ -14,6 +14,7 @@ declare module "next-auth" {
   interface Session extends DefaultSession {
     user: {
       id: string;
+      streakCount: number;
       // ...other properties
       // role: UserRole;
     } & DefaultSession["user"];
@@ -50,6 +51,7 @@ export const authConfig = {
       user: {
         ...session.user,
         id: user.id,
+        streakCount: user.streakCount,
       },
     }),
     async redirect({ url, baseUrl }) {

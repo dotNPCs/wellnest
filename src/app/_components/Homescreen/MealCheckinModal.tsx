@@ -55,10 +55,7 @@ const MealCheckinModal: React.FC<MealCheckinModalProps> = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* Backdrop */}
-      <div
-        className="bg-opacity-50 absolute inset-0 bg-black"
-        onClick={onClose}
-      />
+      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
 
       {/* Modal */}
       <div className="relative mx-4 w-full max-w-md rounded-lg bg-white p-6 shadow-xl">

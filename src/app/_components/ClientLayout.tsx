@@ -31,12 +31,10 @@ export default function ClientLayout({ children }: ClientLayoutProps) {
     if (status === "unauthenticated" || !session?.user) {
       router.push("/api/auth/signin");
     }
-  });
+  }, []);
 
   useEffect(() => {
     if (!isPetLoading) {
-      console.log("Pet fetch complete:", pet ? "Pet found" : "No pet found");
-      console.log("Pet data:", pet);
       setLoading(false);
     }
   }, [isPetLoading, pet]);

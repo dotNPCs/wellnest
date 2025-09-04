@@ -8,6 +8,7 @@ import { MealType } from "@prisma/client";
 import { useState, useEffect } from "react";
 import MealCheckinModal from "./MealCheckinModal";
 import { AnimatePresence, motion } from "framer-motion";
+import { Check } from "lucide-react";
 
 interface MealCheckinHandlerProps {
   /** Specific meal type to check for. If not provided, will determine based on current time */
@@ -19,38 +20,48 @@ interface MealCheckinHandlerProps {
 }
 
 // Helper function to get the current active meal based on time and completion status
-const getCurrentActiveMeal = (todayStatus: any): MealType | null => {
+const getCurrentActiveMeal = (
+  todayStatus: any,
+): { mealType: MealType | null; isCompleted: boolean } => {
   const currentMealTime = getCurrentMealType();
 
-  // If current time meal is not completed, show that
+  // Always show the current time meal first, whether completed or not
   const currentMealKey =
     currentMealTime.toLowerCase() as keyof typeof todayStatus;
-  if (!todayStatus[currentMealKey]) {
-    return currentMealTime;
+  const isCurrentMealCompleted = todayStatus[currentMealKey] as boolean;
+
+  // If current meal time is still active (not completed), show it as actionable
+  if (!isCurrentMealCompleted) {
+    return { mealType: currentMealTime, isCompleted: false };
   }
 
-  // If current meal is done, find next pending meal
-  const nextPending = getNextPendingMeal(todayStatus);
-  return nextPending;
+  // If current meal is completed, show it as completed but still visible
+  return { mealType: currentMealTime, isCompleted: true };
 };
 
 // Helper function to get meal display info
-const getMealDisplayInfo = (mealType: MealType) => {
+const getMealDisplayInfo = (
+  mealType: MealType,
+  isCompleted: boolean = false,
+) => {
   const mealInfo = {
     [MealType.BREAKFAST]: {
-      emoji: "🍳",
-      question: "What's for breakfast?",
+      emoji: isCompleted ? "🍳" : "🍳",
+      question: isCompleted ? "Breakfast logged!" : "What's for breakfast?",
       color: "orange",
+      completedColor: "green",
     },
     [MealType.LUNCH]: {
-      emoji: "🥗",
-      question: "What's for lunch?",
+      emoji: isCompleted ? "🥗" : "🥗",
+      question: isCompleted ? "Lunch logged!" : "What's for lunch?",
       color: "green",
+      completedColor: "green",
     },
     [MealType.DINNER]: {
-      emoji: "🍽️",
-      question: "What's for dinner?",
+      emoji: isCompleted ? "🍽️" : "🍽️",
+      question: isCompleted ? "Dinner logged!" : "What's for dinner?",
       color: "purple",
+      completedColor: "green",
     },
   };
 
@@ -65,7 +76,7 @@ const MealCheckinHandler: React.FC<MealCheckinHandlerProps> = ({
   const [showModal, setShowModal] = useState(false);
   const [hasChecked, setHasChecked] = useState(false);
   const [activeMealType, setActiveMealType] = useState<MealType | null>(null);
-  const [isVisible, setIsVisible] = useState(false);
+  const [isMealCompleted, setIsMealCompleted] = useState(false);
 
   // Query to check today's status
   const { data: todayStatus, refetch } = api.checkin.getTodayStatus.useQuery(
@@ -82,47 +93,45 @@ const MealCheckinHandler: React.FC<MealCheckinHandlerProps> = ({
     if (todayStatus) {
       if (mealType) {
         // If specific meal type is provided, use it
+        const mealKey = mealType.toLowerCase() as keyof typeof todayStatus;
+        const isCompleted = todayStatus[mealKey] as boolean;
         setActiveMealType(mealType);
+        setIsMealCompleted(isCompleted);
       } else {
         // Otherwise, determine automatically based on time and status
         const currentActive = getCurrentActiveMeal(todayStatus);
-        setActiveMealType(currentActive);
+        setActiveMealType(currentActive.mealType);
+        setIsMealCompleted(currentActive.isCompleted);
       }
     }
   }, [todayStatus, mealType]);
 
-  // Handle visibility animation when activeMealType changes
+  // Auto-show modal logic (only for non-completed meals)
   useEffect(() => {
-    if (activeMealType) {
-      // Small delay to ensure smooth animation
-      const timer = setTimeout(() => {
-        setIsVisible(true);
-      }, 100);
-      return () => clearTimeout(timer);
-    } else {
-      setIsVisible(false);
-    }
-  }, [activeMealType]);
-
-  // Auto-show modal logic
-  useEffect(() => {
-    if (todayStatus && activeMealType && !hasChecked && autoShow) {
+    if (
+      todayStatus &&
+      activeMealType &&
+      !hasChecked &&
+      autoShow &&
+      !isMealCompleted
+    ) {
       setHasChecked(true);
 
-      const isMealCompleted = todayStatus[
-        activeMealType.toLowerCase() as keyof typeof todayStatus
-      ] as boolean;
-
       // Only show modal if the meal is not completed
-      if (!isMealCompleted) {
-        const timer = setTimeout(() => {
-          setShowModal(true);
-        }, autoShowDelay);
+      const timer = setTimeout(() => {
+        setShowModal(true);
+      }, autoShowDelay);
 
-        return () => clearTimeout(timer);
-      }
+      return () => clearTimeout(timer);
     }
-  }, [todayStatus, hasChecked, autoShow, autoShowDelay, activeMealType]);
+  }, [
+    todayStatus,
+    hasChecked,
+    autoShow,
+    autoShowDelay,
+    activeMealType,
+    isMealCompleted,
+  ]);
 
   // Reset hasChecked when the active meal changes
   useEffect(() => {
@@ -140,7 +149,7 @@ const MealCheckinHandler: React.FC<MealCheckinHandlerProps> = ({
   };
 
   const openMealModal = () => {
-    if (activeMealType) {
+    if (activeMealType && !isMealCompleted) {
       setShowModal(true);
     }
   };
@@ -173,12 +182,12 @@ const MealCheckinHandler: React.FC<MealCheckinHandlerProps> = ({
     },
   };
 
-  // Don't render anything if no active meal or if all meals are completed
+  // Don't render anything if no active meal
   if (!todayStatus || !activeMealType) {
     return null;
   }
 
-  const mealDisplay = getMealDisplayInfo(activeMealType);
+  const mealDisplay = getMealDisplayInfo(activeMealType, isMealCompleted);
   const completedCount = todayStatus.completedCount || 0;
 
   // If all meals are completed, show completion message
@@ -231,29 +240,45 @@ const MealCheckinHandler: React.FC<MealCheckinHandlerProps> = ({
         exit="exit"
       >
         {/* Current meal prompt */}
-        <div className="mb-4 rounded-lg bg-gray-50 p-4">
+        <div
+          className={`mb-4 rounded-lg p-4 ${isMealCompleted ? "bg-green-50" : "bg-gray-50"}`}
+        >
           <div className="text-center">
-            <motion.div
-              className="mb-2 text-3xl"
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-            >
-              {mealDisplay.emoji}
-            </motion.div>
-            <h3 className="mb-3 text-lg font-medium text-gray-900">
-              {mealDisplay.question}
-            </h3>
+            {!isMealCompleted && (
+              <h3
+                className={`mb-3 text-lg font-medium ${isMealCompleted ? "text-green-800" : "text-gray-900"}`}
+              >
+                {mealDisplay.question}
+              </h3>
+            )}
 
-            <motion.button
-              onClick={openMealModal}
-              className={`w-full rounded-lg px-4 py-3 font-medium text-white transition-colors ${mealDisplay.color === "orange" ? "bg-orange-500 hover:bg-orange-600" : ""} ${mealDisplay.color === "green" ? "bg-green-500 hover:bg-green-600" : ""} ${mealDisplay.color === "purple" ? "bg-purple-500 hover:bg-purple-600" : ""} `}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              Log{" "}
-              {activeMealType.charAt(0) + activeMealType.slice(1).toLowerCase()}
-            </motion.button>
+            {!isMealCompleted && (
+              <motion.button
+                onClick={openMealModal}
+                className={`w-full rounded-lg px-4 py-3 font-medium text-white transition-colors ${mealDisplay.color === "orange" ? "bg-orange-500 hover:bg-orange-600" : ""} ${mealDisplay.color === "green" ? "bg-green-500 hover:bg-green-600" : ""} ${mealDisplay.color === "purple" ? "bg-purple-500 hover:bg-purple-600" : ""} `}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                Log{" "}
+                {activeMealType.charAt(0) +
+                  activeMealType.slice(1).toLowerCase()}
+              </motion.button>
+            )}
+
+            {isMealCompleted && (
+              <motion.div
+                className="w-full rounded-lg bg-green-100 px-4 py-3 text-green-700"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.3 }}
+              >
+                <span className="font-medium">
+                  {activeMealType.charAt(0) +
+                    activeMealType.slice(1).toLowerCase()}{" "}
+                  Checked in!
+                </span>
+              </motion.div>
+            )}
           </div>
 
           {/* Progress indicator */}
@@ -299,12 +324,15 @@ const MealCheckinHandler: React.FC<MealCheckinHandlerProps> = ({
           )}
         </div>
 
-        <MealCheckinModal
-          isOpen={showModal}
-          onClose={handleClose}
-          onSuccess={handleSuccess}
-          mealType={activeMealType}
-        />
+        {/* Only show modal for non-completed meals */}
+        {!isMealCompleted && (
+          <MealCheckinModal
+            isOpen={showModal}
+            onClose={handleClose}
+            onSuccess={handleSuccess}
+            mealType={activeMealType}
+          />
+        )}
       </motion.div>
     </AnimatePresence>
   );
