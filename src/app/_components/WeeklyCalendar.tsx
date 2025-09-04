@@ -33,13 +33,15 @@ const WeeklyCalendar = () => {
           id: "1",
           text: "Had a great breakfast today!",
           timestamp: new Date("2025-09-01T08:30"),
-          moodIndex: 0 // 😊 Happy
+          moodIndex: 0, // 😊 Happy
+          mealRatings: { breakfast: 3, lunch: 2, dinner: 4 } // random ratings
         },
         {
           id: "2",
           text: "Went for a walk in the evening.",
           timestamp: new Date("2025-09-01T18:00"),
-          moodIndex: 2 // 🙂 Content
+          moodIndex: 2, // 🙂 Content
+          mealRatings: { breakfast: 3, lunch: 2, dinner: 4 } // same day, can repeat or vary
         }
       ],
       "2025-09-02": [
@@ -47,10 +49,12 @@ const WeeklyCalendar = () => {
           id: "3",
           text: "Feeling stressed at work.",
           timestamp: new Date("2025-09-02T12:00"),
-          moodIndex: 4 // 😩 Stressed
+          moodIndex: 4, // 😩 Stressed
+          mealRatings: { breakfast: 1, lunch: 2, dinner: 3 } // random
         }
       ]
-  });
+    });
+
 
 // Initialize calendar moods from diary entries
 useEffect(() => {
@@ -75,20 +79,6 @@ useEffect(() => {
   const [selectedMoodIndex, setSelectedMoodIndex] = useState<number | null>(
     null,
   );
-
-// Temporary state for meal ratings in the diary input modal
-  const [tempMealRatings, setTempMealRatings] = useState({
-    breakfast: 0,
-    lunch: 0,
-    dinner: 0,
-  });
-
-  const [mealRatings, setMealRatings] = useState<{
-    [dateKey: string]: { breakfast: number; lunch: number; dinner: number }
-  }>({});
-
-  const renderStars = (rating: number) => "⭐️".repeat(rating) || "—";
-
 
   useEffect(() => {
       setDisplayedWeek(currentWeekStart);
@@ -177,7 +167,6 @@ useEffect(() => {
       setSelectedDate(date);
       setCurrentDiaryText(""); // Clear input for new entries
       setSelectedMoodIndex(null);
-      setTempMealRatings({ breakfast: 0, lunch: 0, dinner: 0 }); // Reset temp ratings
       setShowDiaryInput(true);
    };
 
@@ -186,26 +175,22 @@ useEffect(() => {
 
       const dateKey = getDateKey(selectedDate);
 
-      // Overwrite meal ratings for this day
-// Only update meal ratings if the user actually selected something
-  setMealRatings(prev => {
-      const existing = prev[dateKey] || { breakfast: 0, lunch: 0, dinner: 0 };
-      return {
-        ...prev,
-        [dateKey]: {
-          breakfast: tempMealRatings.breakfast || existing.breakfast,
-          lunch: tempMealRatings.lunch || existing.lunch,
-          dinner: tempMealRatings.dinner || existing.dinner,
-        }
-      };
-  });
+      // Filter out any suspicious characters
+      const sanitizedText = currentDiaryText
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#x27;")
+      .replace(/\//g, "&#x2F;")
+      .trim();
+
 
 
       const newEntry: DiaryEntry = {
-          id: `${Date.now()}-${Math.random()}`,
-          text: currentDiaryText.trim(),
+          id: crypto.randomUUID(),
+          text: sanitizedText,
           timestamp: new Date(),
-          mealRatings: { ...tempMealRatings },   // optional, keep per-entry meals too if you like
           moodIndex: selectedMoodIndex ?? undefined, // 👈 store selected mood
       };
 
@@ -225,7 +210,6 @@ useEffect(() => {
 
       // Reset modal state
       setCurrentDiaryText("");
-      setTempMealRatings({ breakfast: 0, lunch: 0, dinner: 0 });
       setShowDiaryInput(false);
       setSelectedDate(null);
       setSelectedMoodIndex(null);
@@ -257,6 +241,17 @@ useEffect(() => {
   const journeyDate = selectedDate || new Date(); // show today if none selected
   const journeyDateKey = getDateKey(journeyDate);
   const journeyEntries = diaryEntries[journeyDateKey] || [];
+  const getMealRatingsForDay = (dateKey: string) => {
+      const entries = diaryEntries[dateKey];
+      if (!entries || entries.length === 0) {
+        return { breakfast: 0, lunch: 0, dinner: 0 }; // fallback
+      }
+
+      // Take the last entry with mealRatings, or fallback to 0
+      const lastWithRatings = [...entries].reverse().find(e => e.mealRatings);
+      return lastWithRatings?.mealRatings ?? { breakfast: 0, lunch: 0, dinner: 0 };
+  };
+
 
 
   return (
@@ -475,30 +470,6 @@ useEffect(() => {
                   ))}
                 </div>
               </div>
-              {/* Meal Ratings */}
-                <div className="mb-3">
-                  <p className="mb-2 text-sm font-medium" style={{ color: '#5A6B4D' }}>
-                    Rate your meals 🍽️
-                  </p>
-
-                  {(['breakfast', 'lunch', 'dinner'] as const).map((meal) => (
-                    <div key={meal} className="flex items-center gap-2 mb-1">
-                      <span className="w-20 capitalize">{meal}:</span>
-                      {[1,2,3,4,5].map((rating) => (
-                        <button
-                          key={rating}
-                          onClick={() => setTempMealRatings(prev => ({ ...prev, [meal]: rating }))}
-                          className={`text-lg transition-transform ${
-                            tempMealRatings[meal] >= rating ? 'scale-110' : 'opacity-50 hover:opacity-80'
-                          }`}
-                        >
-                          ⭐️
-                        </button>
-                      ))}
-                    </div>
-                  ))}
-                </div>
-
 
               {/* Show existing entries for this day */}
                 {selectedDate && getEntriesForDay(selectedDate).length > 0 && (
@@ -523,12 +494,19 @@ useEffect(() => {
 
               <textarea
                   value={currentDiaryText}
-                  onChange={(e) => setCurrentDiaryText(e.target.value)}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    // Limit input length to 500 characters
+                    if (value.length <= 500) {
+                      setCurrentDiaryText(value);
+                    }
+                  }}
                   placeholder="How was your day? ✨"
                   className="h-24 w-full resize-none rounded-lg bg-white p-2 text-sm focus:outline-none"
                   style={{ border: '2px solid #A5B68D50' }}
                   autoFocus
               />
+
 
               <div className="mt-3 flex gap-2">
                 <button
@@ -562,14 +540,44 @@ useEffect(() => {
                 Your Journey 🌟 - {journeyDate.toLocaleDateString("en", { weekday: "long", month: "short", day: "numeric" })}
               </h3>
 
-              {/* Display meal ratings for the day */}
-              {mealRatings[journeyDateKey] && (
-                <div className="flex gap-2 mb-2 text-sm">
-                  <span>Breakfast: {renderStars(mealRatings[journeyDateKey].breakfast)}</span>
-                  <span>Lunch: {renderStars(mealRatings[journeyDateKey].lunch)}</span>
-                  <span>Dinner: {renderStars(mealRatings[journeyDateKey].dinner)}</span>
-                </div>
-              )}
+                {/* Daily Meal Ratings */}
+                {journeyEntries.length > 0 && (
+                  (() => {
+                    const ratings = getMealRatingsForDay(journeyDateKey);
+
+                    const mealLabels: { [key in keyof typeof ratings]: string } = {
+                      breakfast: "Breakfast",
+                      lunch: "Lunch",
+                      dinner: "Dinner",
+                    };
+
+                    return (
+                      <div className="mb-2 flex flex-col gap-1 text-[10px] text-gray-500">
+                        {( ["breakfast", "lunch", "dinner"] as const ).map(meal => {
+                          const rating = ratings[meal];
+                          const label = mealLabels[meal];
+
+                          return (
+                            <div key={meal} className="flex items-center gap-1">
+                              <span className="w-12">{label}:</span>
+                              {[...Array(5)].map((_, i) => (
+                                <span
+                                  key={i}
+                                  className={`${i < rating ? 'opacity-100' : 'opacity-30'}`}
+                                >
+                                  ⭐
+                                </span>
+
+                              ))}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    );
+                  })()
+                )}
+
+
 
               <div className="space-y-2">
                 {journeyEntries
@@ -589,10 +597,11 @@ useEffect(() => {
 
                       </div>
                       <div className="text-sm whitespace-pre-wrap" style={{ color: '#5A6B4D' }}>
-                        {entry.text}
+                          {entry.text.split('\n').map((line, idx) => (
+                            <span key={idx}>{line}<br /></span>
+                          ))}
                       </div>
                     </div>
-
                   ))
                 }
               </div>
