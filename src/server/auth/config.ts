@@ -51,7 +51,7 @@ export const authConfig = {
       user: {
         ...session.user,
         id: user.id,
-        streakCount: user.streakCount,
+        streakCount: (user as any).streakCount ?? 0,
       },
     }),
     async redirect({ url, baseUrl }) {
