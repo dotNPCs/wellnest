@@ -13,13 +13,64 @@ interface ActivitiesListProps {
 const ActivitiesList: React.FC<ActivitiesListProps> = ({ onNavigate }) => {
     const router = useRouter();
     const activities = [
-        { id: "meditation", title: "Meditation", desc: "Get into the right headspace.", color: "bg-indigo-400", text: "text-yellow-100", icon: "meditationCat", path: "/meditation" },
-        { id: "gratitude", title: "Gratitude", desc: "Recall 3 things you're grateful for.", color: "bg-red-400", text: "text-white", icon: "gratitudeCat", path: "/meditation" },
-        { id: "mindfulness", title: "Mindfulness", desc: "Be present and notice the now.", color: "bg-amber-300", text: "text-gray-800", icon: "mindfulnessCat", path: "/meditation" },
-        { id: "sleep", title: "Better Sleep", desc: "Unwind and prepare for deep rest.", color: "bg-slate-700", text: "text-white", icon: "bettersleepCat", path: "/meditation" },
-        { id: "breathing", title: "Breathing", desc: "Calm your mind with steady breaths.", color: "bg-green-200", text: "text-yellow-100", icon: "breathingCat", path: "/meditation" },
-        { id: "affirmation", title: "Affirmation", desc: "Boost positivity with a daily affirmation.", color: "bg-pink-300", text: "text-gray-800", icon: "affirmationCat", path: "/meditation" },
-    ]
+        {
+            id: "meditation",
+            title: "Meditation",
+            desc: "Get into the right headspace.",
+            color: "bg-gradient-to-br from-[#6E825D] to-[#A3B58C]", // richer green gradient
+            text: "black",
+            icon: "meditationCat",
+            path: "/meditation",
+        },
+        {
+            id: "gratitude",
+            title: "Gratitude",
+            desc: "Recall 3 things you're grateful for.",
+            color: "bg-gradient-to-br from-[#4C4E42] to-[#7B7E6D]", // darker to medium contrast
+            text: "black",
+            icon: "gratitudeCat",
+            path: "/meditation",
+        },
+        {
+            id: "mindfulness",
+            title: "Mindfulness",
+            desc: "Be present and notice the now.",
+            color: "bg-gradient-to-br from-[#6E825D] to-[#B2C49A]", // slightly brighter
+            text: "black",
+            icon: "mindfulnessCat",
+            path: "/meditation",
+        },
+        {
+            id: "sleep",
+            title: "Better Sleep",
+            desc: "Unwind and prepare for deep rest.",
+            color: "bg-gradient-to-br from-[#1B1C17] to-[#505347]", // richer dark gradient
+            text: "black",
+            icon: "bettersleepCat",
+            path: "/meditation",
+        },
+        {
+            id: "breathing",
+            title: "Breathing",
+            desc: "Calm your mind with steady breaths.",
+            color: "bg-gradient-to-br from-[#6E825D] to-[#C1D3A0]", // more vibrant green
+            text: "black",
+            icon: "breathingCat",
+            path: "/meditation",
+        },
+        {
+            id: "affirmation",
+            title: "Affirmation",
+            desc: "Boost positivity with a daily affirmation.",
+            color: "bg-gradient-to-br from-[#9AB18B] to-[#D0E0C1]", // light, lively green gradient
+            text: "text-[#1B1C17]",
+            icon: "affirmationCat",
+            path: "/meditation",
+        },
+    ];
+
+
+
 
     return (
         <div className="min-h-screen overflow-auto">
@@ -39,23 +90,22 @@ const ActivitiesList: React.FC<ActivitiesListProps> = ({ onNavigate }) => {
                     <button
                         key={activity.id}
                         onClick={() => router.push(activity.path)}
-                        className={`${activity.color} ${activity.text} py-20 rounded-xl h-32 flex flex-col items-center justify-center font-semibold text-lg shadow-md transition-transform`}
+                        className={`relative py-20 rounded-xl h-32 flex flex-col items-center justify-center
+               bg-white border-2 border-[#5A6B4D] text-[#5A6B4D] font-semibold text-lg
+               shadow-md transition-transform `}
                     >
                         <Image
                             src={`/activityIcons/${activity.icon}.png`}
                             alt={activity.title}
-                            width={40}    // fixed width
-                            height={40}   // fixed height
+                            width={40}
+                            height={40}
                             className="object-contain"
                         />
-
-                        <span className="font-semibold text-lg mt-2">{activity.title}</span>
-                        <span className="px-2 text-xs font-light opacity-80">{activity.desc}</span>
+                        <span className="font-semibold text-lg mt-2 text-black">{activity.title}</span>
+                        <span className="px-2 text-xs font-light opacity-80 text-black">{activity.desc}</span>
                     </button>
                 ))}
             </div>
-
-
         </div>
     );
 };
