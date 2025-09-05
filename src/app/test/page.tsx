@@ -7,11 +7,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { useState } from "react";
 import { api } from "@/trpc/react";
 import { TRPCClientError } from "@trpc/client";
-import { usePet } from "@/contexts/PetContext";
 
 type UserPet = inferProcedureOutput<(typeof appRouter)["llm"]["findFirstPet"]>;
 
-const Page = () => {
+type Props = {
+  pet: UserPet;
+}
+
+const Page = ({pet} : Props) => {
   const [query, setQuery] = useState<string>("");
   const [LLMResponse, setLLMResponse] = useState<string>(
     JSON.stringify(pet?.personas[0]?.personaJson) ?? "",
@@ -51,15 +54,7 @@ const Page = () => {
 
   return (
     <div className="flex h-full flex-col space-y-4">
-<<<<<<< HEAD
-      <Textarea
-        className="resize-none"
-        value={JSON.stringify(pet?.personas?.[0]?.personaJson)}
-        disabled
-      />
-=======
       <Textarea className="resize-none" value={LLMResponse} disabled />
->>>>>>> d694341 (feat: enhance persona handling and response formatting in LLMRouter)
 
       <div className="flex space-x-2">
         <Input value={query} onChange={(e) => setQuery(e.target.value)} />

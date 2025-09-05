@@ -7,7 +7,7 @@ const Layout = async () => {
 
   return (
     <div className="h-screen p-4">
-      <Page />
+      <Page pet={pet} />
     </div>
   );
 };
