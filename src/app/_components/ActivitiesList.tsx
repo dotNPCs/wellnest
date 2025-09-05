@@ -16,15 +16,17 @@ const ActivitiesList: React.FC<ActivitiesListProps> = ({ onNavigate }) => {
         { id: "mindfulness", title: "Mindfulness", desc: "Be present and notice the now.", color: "bg-amber-300", text: "text-gray-800", icon: "🪷", path: "/meditation" },
         { id: "sleep", title: "Better Sleep", desc: "Unwind and prepare for deep rest.", color: "bg-slate-700", text: "text-white", icon: "😴", path: "/meditation" },
         { id: "breathing", title: "Breathing", desc: "Calm your mind with steady breaths.", color: "bg-green-200", text: "text-yellow-100", icon: "🌬️", path: "/meditation" },
-        { id: "affirmation", title: "Affirmation", desc: "Boost positivity with a daily affirmation.", color: "bg-pink-300", text: "text-gray-800", icon: "📓", path: "/meditation" },];
+        { id: "affirmation", title: "Affirmation", desc: "Boost positivity with a daily affirmation.", color: "bg-pink-300", text: "text-gray-800", icon: "📓", path: "/meditation" },
+    ]
 
     return (
-        <div className="min-h-screen bg-gradient-to-b from-white to-gray-50 relative">
+        <div className="min-h-screen overflow-auto">
             {/* <SideMenu /> */}
             <div className="flex items-center justify-between mb-6">
                 <div className="flex-1">
-                    {/* <h1 className="text-2xl font-bold text-gray-800">Guided Activities</h1> */}
-                    <p className="text-gray-400 text-md">Choose a topic to focus on:</p>
+                    <h3 className="mb-1 ml-3 text-lg font-bold" style={{ color: '#5A6B4D' }}>
+                        Choose a topic to focus on:
+                    </h3>
                 </div>
 
                 <div className="w-8" />
