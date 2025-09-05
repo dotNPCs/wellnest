@@ -4,15 +4,25 @@ import {
   protectedProcedure,
   publicProcedure,
 } from "@/server/api/trpc";
-import { TRPCError } from "@trpc/server";
-
 import { GoogleGenAI } from "@google/genai";
-import { text } from "stream/consumers";
+
 const ai = new GoogleGenAI({
   apiKey: process.env.GEMINI_API_KEY,
 });
-const config = {};
-const model = "gemma-3-27b-it";
+const tools = [
+  {
+    googleSearch: {},
+  },
+];
+
+const config = {
+  thinkingConfig: {
+    thinkingBudget: 0,
+  },
+  tools,
+};
+
+const model = "gemini-2.5-flash-lite";
 const contents = [
   {
     role: "user",
@@ -49,6 +59,15 @@ export const LLMRouter = createTRPCRouter({
     const pet = await ctx.db.userPet.findFirst({
       where: {
         userId: ctx.session.user.id,
+      },
+      include: {
+        personas: {
+          where: {
+            pet: {
+              isActive: true,
+            },
+          },
+        },
       },
     });
 
