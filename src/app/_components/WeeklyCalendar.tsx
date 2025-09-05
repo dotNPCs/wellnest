@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { useSwipeable } from "react-swipeable";
 import { motion, AnimatePresence } from "framer-motion";
 import { type JournalEntry } from "@prisma/client";
 import { api } from "@/trpc/react";
