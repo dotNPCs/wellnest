@@ -3,7 +3,7 @@
 
 @font-face {
   font-family: "publicmix";
-  src: url("/public/fonts/pixelmix.ttf") format("ttf");
+  src: url("/fonts/pixelmix.ttf") format("ttf");
   font-weight: normal;
   font-style: normal;
   font-display: swap;
