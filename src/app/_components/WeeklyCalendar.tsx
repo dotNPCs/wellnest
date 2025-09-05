@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { type JournalEntry } from "@prisma/client";
 import { api } from "@/trpc/react";
 import { UserMood, MealType } from "@prisma/client"; // Adjust import path
+import { useSwipeable } from "react-swipeable";
 import {
   format,
   startOfWeek,

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import PlasmaBackground from "@/components/ui/shadcn-io/plasma-background";
 import { api } from "@/trpc/react";
+import MeditationSprite from "../_components/Pixel/MeditationSprite";
 
 const durations = [1, 5, 10, 15];
 
@@ -89,7 +90,7 @@ export default function MeditationPage() {
       </button>
 
       <motion.div
-        className="relative z-10 flex min-h-screen items-center justify-center"
+        className="relative z-10 flex min-h-screen flex-col items-center justify-center"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
@@ -146,7 +147,7 @@ export default function MeditationPage() {
           </div>
         ) : (
           <motion.div
-            className="flex flex-col items-center justify-center space-y-6"
+            className="relative flex flex-col items-center justify-center space-y-6"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -175,6 +176,7 @@ export default function MeditationPage() {
               />
             </svg>
             <p className="text-4xl font-bold">{formatTime(timeLeft)}</p>
+            <MeditationSprite />
             <button
               className="mt-4 rounded-full bg-[#3b82f6]/50 px-6 py-3 font-bold text-white shadow-black/20"
               onClick={() => setIsRunning(false)}

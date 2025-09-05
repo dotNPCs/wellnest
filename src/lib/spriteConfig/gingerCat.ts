@@ -308,12 +308,12 @@ export const createMeditatingCatIdleManager = (
   onAnimationChange: (animation: string) => void,
 ): CatIdleManager => {
   const meditatingConfig: IdleAnimationConfig = {
-    animations: ["lickPawSitFront", "yawnSitFront"],
-    minInterval: 6000,
-    maxInterval: 15000,
-    specialAnimationDuration: 3000,
-    defaultIdleAnimation: "lickPawSitFront",
-    nightModeAnimations: ["sleepLieFront", "yawnSitFront"],
+    animations: ["sleepLieFront"],
+    minInterval: 2000,
+    maxInterval: 5000,
+    specialAnimationDuration: 2000,
+    defaultIdleAnimation: "sleepLieFront",
+    nightModeAnimations: ["sleepLieFront"],
     nightModeDefaultIdle: "sleepLieFront",
   };
   return new CatIdleManager(meditatingConfig, onAnimationChange);

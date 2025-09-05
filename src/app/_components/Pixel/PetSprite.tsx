@@ -98,30 +98,6 @@ const PetSprite = forwardRef<PetSpriteRef, { pet: UserPet; mood?: string }>(
       [playAnimation],
     );
 
-    // Expose trigger methods via ref
-    useImperativeHandle(
-      ref,
-      () => ({
-        triggerEating: () => triggerAnimation("lickPawSitFront", 3000),
-        triggerMeow: () => triggerAnimation("meowSitFront", 2000),
-        triggerScratch: () => triggerAnimation("sitFrontScratch", 2500),
-        triggerYawn: () => triggerAnimation("yawnSitFront", 2000),
-        triggerPawSwipe: () => triggerAnimation("rightPawSwipeSitFront", 2000),
-        triggerLickPaw: () => triggerAnimation("lickPawLieFront", 3000),
-        triggerHiss: () => triggerAnimation("hissFront", 2000),
-        triggerSleep: () => {
-          setIsManualAnimation(true);
-          idleManagerRef.current?.stop();
-          playAnimation("sleepLieFront");
-        },
-        resumeIdle: () => {
-          setIsManualAnimation(false);
-          idleManagerRef.current?.start();
-        },
-      }),
-      [triggerAnimation, playAnimation],
-    );
-
     return (
       <div
         ref={petRef}
