@@ -2,17 +2,18 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import PlasmaBackground from "@/components/ui/shadcn-io/plasma-background";
 import { api } from "@/trpc/react";
 import MeditationSprite from "../_components/Pixel/MeditationSprite";
 
-const durations = [1, 5, 10, 15];
+const durations = [0.1, 1, 5, 10, 15];
 
 export default function MeditationPage() {
   const [selectedDuration, setSelectedDuration] = useState<number | null>(null);
   const [isRunning, setIsRunning] = useState(false);
   const [timeLeft, setTimeLeft] = useState(0);
+  const [showModal, setShowModal] = useState(false);
   const timerRef = useRef<number | null>(null);
   const router = useRouter();
 
@@ -21,7 +22,6 @@ export default function MeditationPage() {
     setTimeLeft(selectedDuration * 60);
     setIsRunning(true);
   };
-
   const createActivityMutation = api.activity.createActivity.useMutation();
 
   const { data: todayActivities, isLoading } =
@@ -31,28 +31,25 @@ export default function MeditationPage() {
       activity: "MEDITATION",
     });
 
+  // Timer effect only handles decrementing
   useEffect(() => {
     if (isRunning && timeLeft > 0) {
       timerRef.current = window.setInterval(() => {
         setTimeLeft((prev) => prev - 1);
       }, 1000);
-    } else if (timeLeft === 0 && isRunning) {
-      setIsRunning(false);
-      if (timerRef.current) clearInterval(timerRef.current);
-      const logActivity = async () => {
-        createActivityMutation.mutate({
-          activity: "MEDITATION",
-          durationMinutes: selectedDuration || 0,
-        });
-        setSelectedDuration(null);
-      };
-      logActivity();
     }
 
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, [isRunning, timeLeft]);
+  }, [isRunning]);
+
+  useEffect(() => {
+    if (timeLeft === 0 && isRunning) {
+      setIsRunning(false);
+      setShowModal(true);
+    }
+  }, [timeLeft, isRunning]);
 
   const formatTime = (seconds: number) => {
     const m = Math.floor(seconds / 60)
@@ -68,6 +65,14 @@ export default function MeditationPage() {
     timeLeft && selectedDuration
       ? (timeLeft / (selectedDuration * 60)) * circumference
       : circumference;
+
+  const closeModal = (action: "home" | "meditate") => {
+    setShowModal(false);
+    if (action === "home") router.push("/?tab=activities");
+    else {
+      setSelectedDuration(null);
+    }
+  };
 
   return (
     <div className="relative min-h-screen w-full overflow-hidden text-white">
@@ -183,6 +188,53 @@ export default function MeditationPage() {
             >
               Stop
             </button>
+
+            <AnimatePresence>
+              {showModal && (
+                <motion.div
+                  className="fixed inset-0 z-50 flex items-center justify-center bg-black/70"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                >
+                  <motion.div
+                    className="mx-5 max-w-sm space-y-6 rounded-xl bg-white p-8 text-center"
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    exit={{ scale: 0.8, opacity: 0 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <h2
+                      className="mb-1 ml-3 text-lg font-bold"
+                      style={{ color: "#5A6B4D" }}
+                    >
+                      Meditation Complete
+                    </h2>
+                    <p className="mt-2 text-sm text-black/60">
+                      Well done! <br />
+                      Your pet feels lighter and more relaxed.
+                    </p>
+
+                    <div className="flex justify-center gap-4">
+                      <button
+                        onClick={() => closeModal("home")}
+                        className="flex-1 rounded-lg px-3 py-2 text-sm font-bold text-white shadow-md transition-all hover:opacity-90"
+                        style={{ backgroundColor: "#A5B68D" }}
+                      >
+                        Return Home
+                      </button>
+                      <button
+                        onClick={() => closeModal("meditate")}
+                        className="flex-1 rounded-lg px-3 py-2 text-sm font-bold text-white shadow-md transition-all hover:opacity-90"
+                        style={{ backgroundColor: "#A5B68D" }}
+                      >
+                        Meditate Again
+                      </button>
+                    </div>
+                  </motion.div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </motion.div>
         )}
       </motion.div>

@@ -6,7 +6,7 @@ import { useSearchParams } from "next/navigation";
 
 const DrawerContent = () => {
   const searchParams = useSearchParams();
-  const tab = searchParams.get("tab") as "diary" | "activities" | "farm" | null;
+  const tab = searchParams.get("tab") as "diary" | "activities" | null;
 
   return (
     <Tabs defaultValue={tab ?? "diary"} className="w-full">
@@ -41,6 +41,7 @@ const DrawerContent = () => {
           />
         </div>
       </TabsContent>
+
     </Tabs>
   );
 };

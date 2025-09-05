@@ -128,9 +128,9 @@ export default function CustomDrawer({
         height: `${height}vh`,
         minHeight: "40vh",
         maxHeight: allowDragUp ? "900px" : "50vh",
+        overflowY: height >= maxHeight - 1 ? "auto" : "hidden", 
       }}
-    >
-      {/* Drag handle */}
+    >  {/* Drag handle */}
       <div
         className={`flex w-full justify-center py-2 ${allowDragUp ? "cursor-grab active:cursor-grabbing" : ""}`}
         onMouseDown={handleMouseDown}
@@ -142,9 +142,10 @@ export default function CustomDrawer({
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-auto p-4">
+      <div
+        className={`p-4 ${height >= maxHeight - 1 ? "" : "overflow-auto flex-1"}`}
+      >
         <MealCheckinHandler />
-
         {children}
       </div>
     </div>
