@@ -13,12 +13,11 @@ type UserPet = inferProcedureOutput<(typeof appRouter)["llm"]["findFirstPet"]>;
 
 const Page = () => {
   const [query, setQuery] = useState<string>("");
-  const [LLMResponse, setLLMResponse] = useState<string>("");
+  const [LLMResponse, setLLMResponse] = useState<string>(
+    JSON.stringify(pet?.personas[0]?.personaJson) ?? "",
+  );
 
-  // Fetch the pet data using tRPC
-  const { pet } = usePet();
-
-  const { isLoading, refetch } = api.llm.chat.useQuery(
+  const { refetch, isFetching } = api.llm.getChangedPersona.useQuery(
     {
       message: query,
     },
@@ -31,7 +30,7 @@ const Page = () => {
         throwOnError: true,
       });
 
-      if (data) setLLMResponse(data);
+      if (data) setLLMResponse(JSON.stringify(data));
     } catch (e) {
       console.log(e);
       if (e instanceof TRPCClientError) {
@@ -52,11 +51,15 @@ const Page = () => {
 
   return (
     <div className="flex h-full flex-col space-y-4">
+<<<<<<< HEAD
       <Textarea
         className="resize-none"
         value={JSON.stringify(pet?.personas?.[0]?.personaJson)}
         disabled
       />
+=======
+      <Textarea className="resize-none" value={LLMResponse} disabled />
+>>>>>>> d694341 (feat: enhance persona handling and response formatting in LLMRouter)
 
       <div className="flex space-x-2">
         <Input value={query} onChange={(e) => setQuery(e.target.value)} />
@@ -64,14 +67,10 @@ const Page = () => {
           type="button"
           onClick={handleSubmit}
           className="cursor-pointer"
-          disabled={isLoading}
+          disabled={isFetching}
         >
           Submit
         </Button>
-      </div>
-
-      <div className="h-full">
-        <Textarea className="h-full!" value={LLMResponse} disabled />
       </div>
     </div>
   );
