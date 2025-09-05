@@ -1,16 +1,14 @@
-import "../styles/globals.css";
+import "@/styles/globals.css";
 
 import { type Metadata } from "next";
 import { Geist, Jersey_20 } from "next/font/google";
 import localFont from "next/font/local";
 
 import { TRPCReactProvider } from "@/trpc/react";
-import { Suspense } from "react";
-import SplashScreen from "./_components/SplashScreen";
+
 import ClientLayout from "./_components/ClientLayout";
 import { SessionProvider } from "next-auth/react";
 import { auth } from "@/server/auth";
-import { redirect } from "next/navigation";
 
 const geist = Geist({
   subsets: ["latin"],
