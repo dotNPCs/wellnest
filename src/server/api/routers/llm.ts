@@ -217,50 +217,54 @@ export const LLMRouter = createTRPCRouter({
       return response_object;
     }),
   findFirstPet: protectedProcedure.query(async ({ ctx }) => {
-    // TEST DB QUERY
-    const caller = appRouter.createCaller(ctx);
+    // TEST DB QUERY ==================================================
+    // const caller = appRouter.createCaller(ctx);
 
-    const reminder = await caller.llm.getFriendlyReminder();
-    console.log("Reminder:", reminder);
+    // const reminder = await caller.llm.getFriendlyReminder();
+    // console.log("Reminder:", reminder);
 
-    const meditation_text = await caller.llm.getMeditationMessage({
-      meditation_duration: 300,
-      time_started: "10:00 AM",
-    });
-    console.log("Meditation Text:", meditation_text);
+    // const meditation_text = await caller.llm.getMeditationMessage({
+    //   meditation_duration: 300,
+    //   time_started: "10:00 AM",
+    // });
+    // console.log("Meditation Text:", meditation_text);
 
-    const post_meal_text = await caller.llm.getPostMealMessage({
-      meal_description:
-        "I was craving mala xiang guo, and it was a satisfying meal! My cravings have been fulfilled! I had a good time eating with my friends!",
-    });
-    console.log("Post Meal Text:", post_meal_text);
+    // const post_meal_text = await caller.llm.getPostMealMessage({
+    //   meal_description:
+    //     "I was craving mala xiang guo, and it was a satisfying meal! My cravings have been fulfilled! I had a good time eating with my friends!",
+    // });
+    // console.log("Post Meal Text:", post_meal_text);
 
-    const emoji = await caller.llm.getCurrentPersonaEmoji();
-    console.log("Emoji:", emoji);
+    // const emoji = await caller.llm.getCurrentPersonaEmoji();
+    // console.log("Emoji:", emoji);
 
-    const greeting = await caller.llm.getGreeting();
-    console.log("Greeting:", greeting);
+    // const greeting = await caller.llm.getGreeting();
+    // console.log("Greeting:", greeting);
 
-    const persona_state = await caller.llm.getCurrentPersonaState();
-    console.log("Persona State:", persona_state);
-    // END TEST DB QUERY
+    // const persona_state = await caller.llm.getCurrentPersonaState();
+    // console.log("Persona State:", persona_state);
+    // END TEST DB QUERY ==================================================
 
-    const pet = await ctx.db.userPet.findFirst({
+    const persona = await ctx.db.userPetPersona.findFirst({
       where: {
-        userId: ctx.session.user.id,
-      },
-      include: {
-        personas: {
-          where: {
-            pet: {
-              isActive: true,
-            },
-          },
+        pet: {
+          isActive: true,
+          userId: ctx.session.user.id,
         },
       },
+      select: {
+        personaJson: true,
+        id: true,
+      },
     });
 
-    return pet;
+    if (!persona)
+      throw new TRPCError({
+        code: "NOT_FOUND",
+        message: "No active pet persona found",
+      });
+
+    return persona;
   }),
 
   chat: protectedProcedure
