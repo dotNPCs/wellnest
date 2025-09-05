@@ -52,7 +52,6 @@ body {
 
   --color-brand-background:
     var(--brand-background);
-  --radius:
   --radius-sm:
     calc(var(--radius) - 4px);
   --radius-md:
