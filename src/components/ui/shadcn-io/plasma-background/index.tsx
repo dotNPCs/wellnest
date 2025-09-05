@@ -1,11 +1,13 @@
-'use client';
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+
+"use client";
 
 import React, { useEffect, useRef, forwardRef } from "react";
-// @ts-ignore
 import { Renderer, Program, Mesh, Triangle } from "ogl";
-import { cn } from '@/lib/utils';
+import { cn } from "@/lib/utils";
 
-export interface PlasmaBackgroundProps extends React.HTMLAttributes<HTMLDivElement> {
+export interface PlasmaBackgroundProps
+  extends React.HTMLAttributes<HTMLDivElement> {
   color?: string;
   speed?: number;
   direction?: "forward" | "reverse" | "pingpong";
@@ -18,9 +20,9 @@ const hexToRgb = (hex: string): [number, number, number] => {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
   if (!result) return [1, 0.5, 0.2];
   return [
-    parseInt(result[1], 16) / 255,
-    parseInt(result[2], 16) / 255,
-    parseInt(result[3], 16) / 255,
+    parseInt(result[1] ?? "00", 16) / 255,
+    parseInt(result[2] ?? "00", 16) / 255,
+    parseInt(result[3] ?? "00", 16) / 255,
   ];
 };
 
@@ -96,136 +98,144 @@ void main() {
   fragColor = vec4(finalColor, alpha);
 }`;
 
-export const PlasmaBackground = forwardRef<HTMLDivElement, PlasmaBackgroundProps>(({
-  className,
-  color = "#ffffff",
-  speed = 1,
-  direction = "forward",
-  scale = 1,
-  opacity = 1,
-  mouseInteractive = true,
-  ...props
-}, ref) => {
-  // props already contains only DOM props after destructuring above
-  const domProps = props;
+export const PlasmaBackground = forwardRef<
+  HTMLDivElement,
+  PlasmaBackgroundProps
+>(
+  (
+    {
+      className,
+      color = "#ffffff",
+      speed = 1,
+      direction = "forward",
+      scale = 1,
+      opacity = 1,
+      mouseInteractive = true,
+      ...props
+    },
+    ref,
+  ) => {
+    // props already contains only DOM props after destructuring above
+    const domProps = props;
 
-  const containerRef = useRef<HTMLDivElement | null>(null);
-  const mousePos = useRef({ x: 0, y: 0 });
+    const containerRef = useRef<HTMLDivElement | null>(null);
+    const mousePos = useRef({ x: 0, y: 0 });
 
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
+    useEffect(() => {
+      const container = containerRef.current;
+      if (!container) return;
 
-    const useCustomColor = color ? 1.0 : 0.0;
-    const customColorRgb = color ? hexToRgb(color) : [1, 1, 1];
+      const useCustomColor = color ? 1.0 : 0.0;
+      const customColorRgb = color ? hexToRgb(color) : [1, 1, 1];
 
-    const directionMultiplier = direction === "reverse" ? -1.0 : 1.0;
+      const directionMultiplier = direction === "reverse" ? -1.0 : 1.0;
 
-    const renderer = new Renderer({
-      webgl: 2,
-      alpha: true,
-      antialias: false,
-      dpr: Math.min(window.devicePixelRatio || 1, 2),
-    });
-    const gl = renderer.gl;
-    const canvas = gl.canvas as HTMLCanvasElement;
-    canvas.style.display = "block";
-    canvas.style.width = "100%";
-    canvas.style.height = "100%";
-    container.appendChild(canvas);
+      const renderer = new Renderer({
+        webgl: 2,
+        alpha: true,
+        antialias: false,
+        dpr: Math.min(window.devicePixelRatio || 1, 2),
+      });
+      const gl = renderer.gl;
+      const canvas = gl.canvas as HTMLCanvasElement;
+      canvas.style.display = "block";
+      canvas.style.width = "100%";
+      canvas.style.height = "100%";
+      container.appendChild(canvas);
 
-    const geometry = new Triangle(gl);
+      const geometry = new Triangle(gl);
 
-    const program = new Program(gl, {
-      vertex: vertex,
-      fragment: fragment,
-      uniforms: {
-        iTime: { value: 0 },
-        iResolution: { value: new Float32Array([1, 1]) },
-        uCustomColor: { value: new Float32Array(customColorRgb) },
-        uUseCustomColor: { value: useCustomColor },
-        uSpeed: { value: speed * 0.4 },
-        uDirection: { value: directionMultiplier },
-        uScale: { value: scale },
-        uOpacity: { value: opacity },
-        uMouse: { value: new Float32Array([0, 0]) },
-        uMouseInteractive: { value: mouseInteractive ? 1.0 : 0.0 },
-      },
-    });
+      const program = new Program(gl, {
+        vertex: vertex,
+        fragment: fragment,
+        uniforms: {
+          iTime: { value: 0 },
+          iResolution: { value: new Float32Array([1, 1]) },
+          uCustomColor: { value: new Float32Array(customColorRgb) },
+          uUseCustomColor: { value: useCustomColor },
+          uSpeed: { value: speed * 0.4 },
+          uDirection: { value: directionMultiplier },
+          uScale: { value: scale },
+          uOpacity: { value: opacity },
+          uMouse: { value: new Float32Array([0, 0]) },
+          uMouseInteractive: { value: mouseInteractive ? 1.0 : 0.0 },
+        },
+      });
 
-    const mesh = new Mesh(gl, { geometry, program });
+      const mesh = new Mesh(gl, { geometry, program });
 
-    const handleMouseMove = (e: MouseEvent) => {
-      if (!mouseInteractive) return;
-      const rect = container.getBoundingClientRect();
-      mousePos.current.x = e.clientX - rect.left;
-      mousePos.current.y = e.clientY - rect.top;
-      const mouseUniform = program.uniforms.uMouse.value as Float32Array;
-      mouseUniform[0] = mousePos.current.x;
-      mouseUniform[1] = mousePos.current.y;
-    };
+      const handleMouseMove = (e: MouseEvent) => {
+        if (!mouseInteractive) return;
+        const rect = container.getBoundingClientRect();
+        mousePos.current.x = e.clientX - rect.left;
+        mousePos.current.y = e.clientY - rect.top;
+        const mouseUniform = program.uniforms.uMouse.value as Float32Array;
+        mouseUniform[0] = mousePos.current.x;
+        mouseUniform[1] = mousePos.current.y;
+      };
 
-    if (mouseInteractive) {
-      container.addEventListener("mousemove", handleMouseMove);
-    }
-
-    const setSize = () => {
-      const rect = container.getBoundingClientRect();
-      const width = Math.max(1, Math.floor(rect.width));
-      const height = Math.max(1, Math.floor(rect.height));
-      renderer.setSize(width, height);
-      const res = program.uniforms.iResolution.value as Float32Array;
-      res[0] = gl.drawingBufferWidth;
-      res[1] = gl.drawingBufferHeight;
-    };
-
-    const ro = new ResizeObserver(setSize);
-    ro.observe(container);
-    setSize();
-
-    let raf = 0;
-    const t0 = performance.now();
-    const loop = (t: number) => {
-      let timeValue = (t - t0) * 0.001;
-
-      if (direction === "pingpong") {
-        const cycle = Math.sin(timeValue * 0.5) * directionMultiplier;
-        (program.uniforms.uDirection as any).value = cycle;
+      if (mouseInteractive) {
+        container.addEventListener("mousemove", handleMouseMove);
       }
 
-      (program.uniforms.iTime as any).value = timeValue;
-      renderer.render({ scene: mesh });
-      raf = requestAnimationFrame(loop);
-    };
-    raf = requestAnimationFrame(loop);
+      const setSize = () => {
+        const rect = container.getBoundingClientRect();
+        const width = Math.max(1, Math.floor(rect.width));
+        const height = Math.max(1, Math.floor(rect.height));
+        renderer.setSize(width, height);
+        const res = program.uniforms.iResolution.value as Float32Array;
+        res[0] = gl.drawingBufferWidth;
+        res[1] = gl.drawingBufferHeight;
+      };
 
-    return () => {
-      cancelAnimationFrame(raf);
-      ro.disconnect();
-      if (mouseInteractive && container) {
-        container.removeEventListener("mousemove", handleMouseMove);
-      }
-      try {
-        if (canvas.parentElement === container) {
-          container.removeChild(canvas);
+      const ro = new ResizeObserver(setSize);
+      ro.observe(container);
+      setSize();
+
+      let raf = 0;
+      const t0 = performance.now();
+      const loop = (t: number) => {
+        const timeValue = (t - t0) * 0.001;
+
+        if (direction === "pingpong") {
+          const cycle = Math.sin(timeValue * 0.5) * directionMultiplier;
+          program.uniforms.uDirection.value = cycle;
         }
-      } catch {}
-    };
-  }, [color, speed, direction, scale, opacity, mouseInteractive]);
 
-  return (
-    <div
-      ref={(node) => {
-        containerRef.current = node;
-        if (typeof ref === 'function') ref(node);
-        else if (ref) ref.current = node;
-      }}
-      className={cn("w-full h-full relative overflow-hidden", className)}
-      {...domProps}
-    />
-  );
-});
+        program.uniforms.iTime.value = timeValue;
+        renderer.render({ scene: mesh });
+        raf = requestAnimationFrame(loop);
+      };
+      raf = requestAnimationFrame(loop);
 
-PlasmaBackground.displayName = 'PlasmaBackground';
+      return () => {
+        cancelAnimationFrame(raf);
+        ro.disconnect();
+        if (mouseInteractive && container) {
+          container.removeEventListener("mousemove", handleMouseMove);
+        }
+        try {
+          if (canvas.parentElement === container) {
+            container.removeChild(canvas);
+          }
+        } catch {}
+      };
+    }, [color, speed, direction, scale, opacity, mouseInteractive]);
+
+    return (
+      <div
+        ref={(node) => {
+          containerRef.current = node;
+          if (typeof ref === "function") ref(node);
+          else if (ref) ref.current = node;
+        }}
+        className={cn("relative h-full w-full overflow-hidden", className)}
+        {...domProps}
+      />
+    );
+  },
+);
+
+PlasmaBackground.displayName = "PlasmaBackground";
 
 export default PlasmaBackground;

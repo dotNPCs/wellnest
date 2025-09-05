@@ -17,11 +17,11 @@ export const activityRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;
-      const durationMs = (input.durationMinutes || 0) * 60 * 1000;
+      const durationMs = (input.durationMinutes ?? 0) * 60 * 1000;
       const userActivity = await ctx.db.userActivity.create({
         data: {
           userId,
-          duration: input.durationMinutes || 0,
+          duration: input.durationMinutes ?? 0,
           activity: input.activity,
           notes: input.notes,
           createdAt: new Date(Date.now() - durationMs),

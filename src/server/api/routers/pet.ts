@@ -73,7 +73,7 @@ export const petRouter = createTRPCRouter({
         currentMood: pet.currentMood,
         familiarity: pet.familiarity,
         recentMoodLogs: pet.moodLogs,
-        currentPersona: pet.personas[0] || null,
+        currentPersona: pet.personas[0] ?? null,
       };
     }),
 
@@ -117,7 +117,8 @@ export const petRouter = createTRPCRouter({
             petId: newPet.id,
             mood: "NEUTRAL",
             happiness: 10.0,
-            status: "Hoping to find a loving home!",
+            dialogue: "Hoping to find a loving home!",
+            status: "Your new pet is excited to meet you!",
             trigger: "ADOPTION",
           },
         });
@@ -127,34 +128,16 @@ export const petRouter = createTRPCRouter({
           data: {
             petId: newPet.id,
             personaJson: {
-              core_stats: {
-                energy: 50,
-                mood: 50,
-                affection: 50,
-                trust: 50,
-                stress: 50,
-                playfulness: 50,
-              },
-              emotions: {
-                happiness: 50,
-                sadness: 50,
-                anger: 50,
-                fear_anxiety: 50,
-                surprise: 50,
-                compassion: 50,
-                curiosity: 50,
-              },
-              personality_traits: {
-                empathy: 50,
-                loyalty: 50,
-                optimism: 50,
-                patience: 50,
-                humor: 50,
-                confidence: 50,
-              },
-              role: "I am a cat, I heal mentally throughout the day, I want to improve overall mood/metal health of user, I am a reflection of my user",
-              core_personality: "concerned, cute, clingy, fierce when angry",
-              current_mood: "calm",
+              cheerful: 5.0,
+              calm: 5.0,
+              playful: 5.0,
+              empathetic: 5.0,
+              shy: 5.0,
+              quirky: 5.0,
+              description:
+                "A newly adopted pet with balanced personality traits",
+              confidence: 1.0,
+              trigger: "Initial adoption personality assessment",
             },
           },
         });

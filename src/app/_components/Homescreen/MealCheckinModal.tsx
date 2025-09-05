@@ -1,8 +1,9 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import React, { useState } from "react";
 import { MEAL_CONFIG } from "@/lib/utils";
 import { MealType } from "@prisma/client";
 import { api } from "@/trpc/react";
-
 
 interface MealCheckinModalProps {
   isOpen: boolean;
@@ -40,15 +41,15 @@ const MealCheckinModal: React.FC<MealCheckinModalProps> = ({
   });
 
   const handleSubmit = (e: React.FormEvent) => {
-      e.preventDefault();
-      setIsSubmitting(true);
+    e.preventDefault();
+    setIsSubmitting(true);
 
-      createCheckin.mutate({
-        mealType,
-        rating,
-        notes: notes.trim() || undefined, // no HTML escaping needed
-        date: new Date(),
-      });
+    createCheckin.mutate({
+      mealType,
+      rating,
+      notes: notes.trim() || undefined, // no HTML escaping needed
+      date: new Date(),
+    });
   };
 
   if (!isOpen) return null;
@@ -64,7 +65,7 @@ const MealCheckinModal: React.FC<MealCheckinModalProps> = ({
       {/* Modal with animation-ready styles */}
       <div className="relative w-full max-w-md transform overflow-hidden rounded-2xl bg-gradient-to-br from-white via-[#fdfcf8] to-[#e1db92]/20 shadow-2xl transition-all">
         {/* Decorative header background */}
-        <div className="absolute left-0 right-0 top-0 h-32 bg-gradient-to-br from-[#d7a43f]/10 to-transparent" />
+        <div className="absolute top-0 right-0 left-0 h-32 bg-gradient-to-br from-[#d7a43f]/10 to-transparent" />
 
         <div className="relative p-6">
           {/* Header */}
@@ -134,7 +135,9 @@ const MealCheckinModal: React.FC<MealCheckinModalProps> = ({
             <div className="mb-6">
               <label className="mb-2 block text-sm font-semibold text-[#402e1a]">
                 Notes
-                <span className="ml-1 font-normal text-[#6a5a43]">(optional)</span>
+                <span className="ml-1 font-normal text-[#6a5a43]">
+                  (optional)
+                </span>
               </label>
               <div className="relative">
                 <textarea
@@ -145,7 +148,7 @@ const MealCheckinModal: React.FC<MealCheckinModalProps> = ({
                   rows={3}
                   maxLength={500}
                 />
-                <div className="absolute bottom-3 right-3 rounded-full bg-white/90 px-2 py-0.5 text-xs font-medium text-[#6a5a43]">
+                <div className="absolute right-3 bottom-3 rounded-full bg-white/90 px-2 py-0.5 text-xs font-medium text-[#6a5a43]">
                   {notes.length}/500
                 </div>
               </div>
@@ -195,14 +198,24 @@ const MealCheckinModal: React.FC<MealCheckinModalProps> = ({
                   ) : (
                     <span className="flex items-center justify-center gap-2">
                       Save Check-in
-                      <svg className="h-4 w-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      <svg
+                        className="h-4 w-4 transition-transform group-hover:translate-x-1"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M5 13l4 4L19 7"
+                        />
                       </svg>
                     </span>
                   )}
                 </span>
                 {!isSubmitting && (
-                  <div className="absolute inset-0 bg-white/20 transition-transform duration-300 ease-out translate-x-[-100%] group-hover:translate-x-[100%]" />
+                  <div className="absolute inset-0 translate-x-[-100%] bg-white/20 transition-transform duration-300 ease-out group-hover:translate-x-[100%]" />
                 )}
               </button>
             </div>

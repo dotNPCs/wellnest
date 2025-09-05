@@ -109,7 +109,7 @@ const AssetBackground = () => {
 
       // Twinkling stars animation (only visible at night)
       if (timePhase === "night") {
-        gsap.to(starsRef.current?.children || [], {
+        gsap.to(starsRef.current?.children ?? [], {
           opacity: 0.2,
           duration: 2,
           repeat: -1,
