@@ -126,7 +126,6 @@ const MealCheckinModal: React.FC<MealCheckinModalProps> = ({
               </div>
               <div className="mt-2 flex justify-between text-xs text-[#6a5a43]">
                 <span>Poor</span>
-                <span className="font-medium text-[#d7a43f]">★★★</span>
                 <span>Excellent</span>
               </div>
             </div>

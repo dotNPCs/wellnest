@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { useSwipeable } from "react-swipeable";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface DiaryEntry {
@@ -23,6 +22,8 @@ const WeeklyCalendar = () => {
   const [displayedWeek, setDisplayedWeek] = useState(currentWeekStart);
   const [swipeDirection, setSwipeDirection] = useState(0);
   const [moodStates, setMoodStates] = useState<{ [key: string]: number }>({});
+  const [touchStart, setTouchStart] = useState(0);
+  const [touchEnd, setTouchEnd] = useState(0);
 
   const [diaryEntries, setDiaryEntries] = useState<{
       [key: string]: DiaryEntry[];
@@ -115,11 +116,30 @@ useEffect(() => {
       });
   };
 
-  const handlers = useSwipeable({
-      onSwipedLeft: () => nextWeek(),  // Swipe left → next week
-      onSwipedRight: () => prevWeek(), // Swipe right → previous week
-      trackMouse: true, // optional, allows swipe with mouse
-  });
+  // Handle touch events for swipe
+  const handleTouchStart = (e: any) => {
+    setTouchEnd(0); // Reset
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchMove = (e: any) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > 50;
+    const isRightSwipe = distance < -50;
+
+    if (isLeftSwipe) {
+      nextWeek();
+    }
+    if (isRightSwipe) {
+      prevWeek();
+    }
+  };
+
   const getDaysInWeek = (weekStart: Date): Date[] => {
       const days: Date[] = [];
       for (let i = 0; i < 7; i++) {
@@ -303,7 +323,6 @@ useEffect(() => {
           return null;
         })()}
 
-        {/* Days Grid - Optimized for iPhone SE width */}
         {/* Days Grid - Swipe + Smooth Animation */}
         <AnimatePresence mode="wait">
           <motion.div
@@ -312,7 +331,9 @@ useEffect(() => {
               animate={{ x: 0, opacity: 1 }}
               exit={{ x: -swipeDirection * 300, opacity: 0 }}
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
-              {...handlers}
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
               className="w-full px-2"
           >
             <div className="grid grid-cols-7 gap-1">
@@ -521,8 +542,8 @@ useEffect(() => {
 
         {/* Diary Entries Display - Mobile optimized */}
         {getAllEntriesSorted().length > 0 && (
-          <div className="mt-6 w-full px-2 pb-4">
-              <h3 className="mb-3 text-lg font-bold" style={{ color: '#5A6B4D' }}>
+          <div className="mt-6 w-full px-2 pb-4 flex-1" style={{ overflowY: 'auto', minHeight: 0 }}>
+              <h3 className="mb-3 text-lg font-bold sticky top-0 bg-white py-2 z-10" style={{ color: '#5A6B4D', backgroundColor: 'rgba(255,255,255,0.95)' }}>
                 Your Journey 🌟 - {journeyDate.toLocaleDateString("en", { weekday: "long", month: "short", day: "numeric" })}
               </h3>
 
@@ -565,7 +586,7 @@ useEffect(() => {
 
 
 
-              <div className="space-y-2">
+              <div className="space-y-2" style={{ paddingBottom: '40vh' }}>
                 {journeyEntries
                   .sort((a,b) => b.timestamp.getTime() - a.timestamp.getTime())
                   .map(entry => (
@@ -582,10 +603,8 @@ useEffect(() => {
                         })()}
 
                       </div>
-                      <div className="text-sm whitespace-pre-wrap" style={{ color: '#5A6B4D' }}>
-                          {entry.text.split('\n').map((line, idx) => (
-                            <span key={idx}>{line}<br /></span>
-                          ))}
+                      <div className="text-sm break-words" style={{ color: '#5A6B4D', overflowWrap: 'break-word', wordBreak: 'break-word' }}>
+                          {entry.text}
                       </div>
                     </div>
                   ))
