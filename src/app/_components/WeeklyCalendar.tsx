@@ -196,7 +196,7 @@ useEffect(() => {
       const dateKey = getDateKey(selectedDate);
 
       const newEntry: DiaryEntry = {
-        id: `${Date.now()}-${Math.random()}`,
+        id: crypto.randomUUID(),
         text: currentDiaryText.trim(), // store raw text
         timestamp: new Date(),
         moodIndex: selectedMoodIndex ?? undefined,
