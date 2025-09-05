@@ -34,13 +34,13 @@ const DrawerContent = () => {
       </TabsList>
 
       <TabsContent value="diary">
-        <div className="max-h-[calc(100vh-6rem)] overflow-y-auto scrollbar-hidden">
+        <div className="max-h-[calc(100vh-30rem)]">
           <WeeklyCalendar />
         </div>
       </TabsContent>
 
       <TabsContent value="activities">
-        <div className="max-h-[calc(100vh-6rem)] overflow-y-auto scrollbar-hidden">
+        <div className="max-h-[calc(100vh-30rem)]">
           <ActivitiesList
             onNavigate={function (screen: "home" | "meditation"): void {
               throw new Error("Function not implemented.");
@@ -50,8 +50,13 @@ const DrawerContent = () => {
       </TabsContent>
 
       <TabsContent value="farm">
-        <div className="max-h-[calc(100vh-6rem)] overflow-y-auto scrollbar-hidden">
-          farm
+        <div className="max-h-[calc(100vh-30rem)]">
+          <h1>putting activities component here for placeholder for farm</h1>
+          <ActivitiesList
+            onNavigate={function (screen: "home" | "meditation"): void {
+              throw new Error("Function not implemented.");
+            }}
+          />
         </div>
       </TabsContent>
 

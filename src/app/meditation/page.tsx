@@ -1,16 +1,17 @@
-"use client";
+"use client"
 
 import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import PlasmaBackground from "@/components/ui/shadcn-io/plasma-background";
 
-const durations = [1, 5, 10, 15];
+const durations = [0.1, 1, 5, 10, 15];
 
 export default function MeditationPage() {
     const [selectedDuration, setSelectedDuration] = useState<number | null>(null);
     const [isRunning, setIsRunning] = useState(false);
     const [timeLeft, setTimeLeft] = useState(0);
+    const [showModal, setShowModal] = useState(false);
     const timerRef = useRef<number | null>(null);
     const router = useRouter();
 
@@ -20,20 +21,26 @@ export default function MeditationPage() {
         setIsRunning(true);
     };
 
+    // Timer effect only handles decrementing
     useEffect(() => {
         if (isRunning && timeLeft > 0) {
             timerRef.current = window.setInterval(() => {
                 setTimeLeft((prev) => prev - 1);
             }, 1000);
-        } else if (timeLeft === 0 && isRunning) {
-            setIsRunning(false);
-            if (timerRef.current) clearInterval(timerRef.current);
         }
 
         return () => {
             if (timerRef.current) clearInterval(timerRef.current);
         };
-    }, [isRunning, timeLeft]);
+    }, [isRunning]);
+
+    useEffect(() => {
+        if (timeLeft === 0 && isRunning) {
+            setIsRunning(false);
+            setShowModal(true);
+        }
+    }, [timeLeft, isRunning]);
+
 
     const formatTime = (seconds: number) => {
         const m = Math.floor(seconds / 60).toString().padStart(2, "0");
@@ -48,6 +55,14 @@ export default function MeditationPage() {
             ? (timeLeft / (selectedDuration * 60)) * circumference
             : circumference;
 
+    const closeModal = (action: "home" | "meditate") => {
+        setShowModal(false);
+        if (action === "home") router.push("/?tab=activities");
+        else {
+            setSelectedDuration(null);
+        }
+    };
+
     return (
         <div className="relative min-h-screen w-full overflow-hidden text-white">
             <div className="absolute inset-0">
@@ -58,7 +73,7 @@ export default function MeditationPage() {
                     scale={1.8}
                     opacity={0.6}
                 />
-                <div className="absolute inset-0 bg-black/70" /> 
+                <div className="absolute inset-0 bg-black/70" />
             </div>
 
             <button
@@ -164,6 +179,47 @@ export default function MeditationPage() {
                     </motion.div>
                 )}
             </motion.div>
+
+            {/* modal */}
+            <AnimatePresence>
+                {showModal && (
+                    <motion.div
+                        className="fixed inset-0 z-50 flex items-center justify-center bg-black/70"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                    >
+                        <motion.div
+                            className="bg-white mx-5 rounded-xl p-8 max-w-sm text-center space-y-6"
+                            initial={{ scale: 0.8, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.8, opacity: 0 }}
+                            transition={{ duration: 0.3 }}
+                        >
+                            <h2 className="mb-1 ml-3 text-lg font-bold" style={{ color: '#5A6B4D' }}>
+                                Meditation Complete
+                            </h2>
+                            <p className="text-md text-black/60">
+                                Well done! You’ve just taken a few minutes to center yourself.
+                            </p>
+                            <div className="flex justify-center gap-4">
+                                <button
+                                    className="px-4 py-2 bg-[#3b82f6] text-white rounded-full font-semibold shadow"
+                                    onClick={() => closeModal("home")}
+                                >
+                                    Return Home
+                                </button>
+                                <button
+                                    className="px-4 py-2 bg-green-500 text-white rounded-full font-semibold shadow"
+                                    onClick={() => closeModal("meditate")}
+                                >
+                                    Meditate Again
+                                </button>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }
