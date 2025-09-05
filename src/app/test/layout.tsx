@@ -1,15 +1,11 @@
 import type React from "react";
-import { api } from "@/trpc/server";
-import Page from "./page";
 
-const Layout = async () => {
-  const pet = await api.llm.findFirstPet();
+type Props = {
+  children: React.ReactNode;
+};
 
-  return (
-    <div className="h-screen p-4">
-      <Page />
-    </div>
-  );
+const Layout = async ({ children }: Props) => {
+  return <div className="h-screen p-4">{children}</div>;
 };
 
 export default Layout;
