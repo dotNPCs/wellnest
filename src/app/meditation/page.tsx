@@ -199,19 +199,22 @@ export default function MeditationPage() {
                             <h2 className="mb-1 ml-3 text-lg font-bold" style={{ color: '#5A6B4D' }}>
                                 Meditation Complete
                             </h2>
-                            <p className="text-md text-black/60">
-                                Well done! You’ve just taken a few minutes to center yourself.
+                            <p className="text-sm text-black/60 mt-2">
+                                Well done! <br />Your pet feels lighter and more relaxed.
                             </p>
+
                             <div className="flex justify-center gap-4">
                                 <button
-                                    className="px-4 py-2 bg-[#3b82f6] text-white rounded-full font-semibold shadow"
                                     onClick={() => closeModal("home")}
+                                    className="flex-1 rounded-lg px-3 py-2 text-sm font-bold text-white shadow-md transition-all hover:opacity-90"
+                                    style={{ backgroundColor: '#A5B68D' }}
                                 >
                                     Return Home
                                 </button>
                                 <button
-                                    className="px-4 py-2 bg-green-500 text-white rounded-full font-semibold shadow"
                                     onClick={() => closeModal("meditate")}
+                                    className="flex-1 rounded-lg px-3 py-2 text-sm font-bold text-white shadow-md transition-all hover:opacity-90"
+                                    style={{ backgroundColor: '#A5B68D' }}
                                 >
                                     Meditate Again
                                 </button>
