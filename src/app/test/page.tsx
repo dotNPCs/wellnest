@@ -45,7 +45,11 @@ const Page = ({ pet }: Props) => {
 
   return (
     <div className="flex h-full flex-col space-y-4">
-      <Textarea className="resize-none" value={JSON.stringify(pet)} disabled />
+      <Textarea
+        className="resize-none"
+        value={JSON.stringify(pet?.personas[0]?.personaJson)}
+        disabled
+      />
 
       <div className="flex space-x-2">
         <Input value={query} onChange={(e) => setQuery(e.target.value)} />
