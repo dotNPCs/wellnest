@@ -3,13 +3,8 @@ generator client {
 }
 
 datasource db {
-<<<<<<< HEAD
-    provider = "postgresql"
-    url      = env("DIRECT_URL")
-=======
   provider = "postgresql"
-  url      = env("DATABASE_URL")
->>>>>>> d1ca616 (fix: update database URL and enhance pet persona structure)
+  url      = env("DIRECT_URL")
 }
 
 model Account {
