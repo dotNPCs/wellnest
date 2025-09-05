@@ -109,6 +109,7 @@ const PetWrapper = () => {
       <div className="fixed top-4 left-4 z-10">
         <Dropdown />
       </div>
+
       <PixelBackground />
       {/* Pet Sprite */}
       {pet && <PetSprite pet={pet} mood={pet.currentMood} />}

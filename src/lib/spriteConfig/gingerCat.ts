@@ -304,6 +304,21 @@ export const createPlayfulCatIdleManager = (
   return new CatIdleManager(playfulConfig, onAnimationChange);
 };
 
+export const createMeditatingCatIdleManager = (
+  onAnimationChange: (animation: string) => void,
+): CatIdleManager => {
+  const meditatingConfig: IdleAnimationConfig = {
+    animations: ["lickPawSitFront", "yawnSitFront"],
+    minInterval: 6000,
+    maxInterval: 15000,
+    specialAnimationDuration: 3000,
+    defaultIdleAnimation: "lickPawSitFront",
+    nightModeAnimations: ["sleepLieFront", "yawnSitFront"],
+    nightModeDefaultIdle: "sleepLieFront",
+  };
+  return new CatIdleManager(meditatingConfig, onAnimationChange);
+};
+
 export const createLazyCatIdleManager = (
   onAnimationChange: (animation: string) => void,
 ): CatIdleManager => {

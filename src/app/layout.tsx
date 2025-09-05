@@ -87,8 +87,8 @@ export const metadata: Metadata = {
 export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  const session = await auth(); // TODO: Replace with actual session retrieval logic
-  if (!session) return redirect("/login");
+  const session = await auth();
+
   return (
     <html
       lang="en"

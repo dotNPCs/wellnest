@@ -87,7 +87,6 @@ const PetSprite = forwardRef<PetSpriteRef, { pet: UserPet; mood?: string }>(
         setIsManualAnimation(true);
         idleManagerRef.current?.stop();
 
-        console.log(`Triggering animation: ${animationName}`);
         playAnimation(animationName);
 
         // Return to idle after specified duration
@@ -128,14 +127,16 @@ const PetSprite = forwardRef<PetSpriteRef, { pet: UserPet; mood?: string }>(
         ref={petRef}
         className="absolute -bottom-5 left-1/2 z-10 -translate-x-1/2 transform"
         onClick={() => {
-          pet.familiarity > 25
-            ? triggerAnimation("meowSitFront")
-            : triggerAnimation("hissFront");
+          idleManagerRef.current?.isInNightMode() &&
+            (pet.familiarity > 25
+              ? triggerAnimation("meowSitFront")
+              : triggerAnimation("hissFront"));
         }} // desktop click
         onTouchStart={() =>
-          pet.familiarity > 25
+          idleManagerRef.current?.isInNightMode() &&
+          (pet.familiarity > 25
             ? triggerAnimation("meowSitFront")
-            : triggerAnimation("hissFront")
+            : triggerAnimation("hissFront"))
         } // mobile touch
       >
         <div className="relative">
