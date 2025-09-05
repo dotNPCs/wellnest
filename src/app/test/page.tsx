@@ -7,14 +7,16 @@ import { Textarea } from "@/components/ui/textarea";
 import { useState } from "react";
 import { api } from "@/trpc/react";
 import { TRPCClientError } from "@trpc/client";
+import { usePet } from "@/contexts/PetContext";
+
 type UserPet = inferProcedureOutput<(typeof appRouter)["llm"]["findFirstPet"]>;
 
-type Props = {
-  pet: UserPet;
-};
-const Page = ({ pet }: Props) => {
+const Page = () => {
   const [query, setQuery] = useState<string>("");
   const [LLMResponse, setLLMResponse] = useState<string>("");
+
+  // Fetch the pet data using tRPC
+  const { pet } = usePet();
 
   const { isLoading, refetch } = api.llm.chat.useQuery(
     {
@@ -43,11 +45,16 @@ const Page = ({ pet }: Props) => {
     }
   };
 
+  // Show loading state while pet data is being fetched
+  if (!pet) {
+    return <div>Loading...</div>;
+  }
+
   return (
     <div className="flex h-full flex-col space-y-4">
       <Textarea
         className="resize-none"
-        value={JSON.stringify(pet?.personas[0]?.personaJson)}
+        value={JSON.stringify(pet?.personas?.[0]?.personaJson)}
         disabled
       />
 

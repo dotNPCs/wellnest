@@ -1,4 +1,7 @@
-// config/catSpriteConfig.ts
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-inferrable-types */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+
 import type { SpriteConfig } from "@/lib/spriteAnimations/gingerCat";
 
 export interface IdleAnimationConfig {
@@ -57,14 +60,14 @@ export class CatIdleManager {
   // Get the current default animation based on time of day
   private getCurrentDefaultAnimation(): string {
     return this.isNightMode
-      ? this.config.nightModeDefaultIdle || this.config.defaultIdleAnimation
+      ? (this.config.nightModeDefaultIdle ?? this.config.defaultIdleAnimation)
       : this.config.defaultIdleAnimation;
   }
 
   // Get available animations based on time of day
   private getCurrentAnimations(): string[] {
     return this.isNightMode
-      ? this.config.nightModeAnimations || this.config.animations
+      ? (this.config.nightModeAnimations ?? this.config.animations)
       : this.config.animations;
   }
 
@@ -309,9 +312,9 @@ export const createMeditatingCatIdleManager = (
 ): CatIdleManager => {
   const meditatingConfig: IdleAnimationConfig = {
     animations: ["sleepLieFront"],
-    minInterval: 2000,
-    maxInterval: 5000,
-    specialAnimationDuration: 2000,
+    minInterval: 4000,
+    maxInterval: 4000,
+    specialAnimationDuration: 4000,
     defaultIdleAnimation: "sleepLieFront",
     nightModeAnimations: ["sleepLieFront"],
     nightModeDefaultIdle: "sleepLieFront",

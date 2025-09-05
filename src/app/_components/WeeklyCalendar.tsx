@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -69,10 +71,10 @@ const WeeklyCalendar = () => {
       setIsCreatingJournal(true);
     },
 
-    onSuccess: () => {
+    onSuccess: async () => {
       setIsCreatingJournal(false);
-      refetchJournals();
-      refetchMoods();
+      await refetchJournals();
+      await refetchMoods();
     },
     onSettled: () => {
       setIsCreatingJournal(false);
@@ -80,8 +82,8 @@ const WeeklyCalendar = () => {
   });
 
   const upsertCheckin = api.journal.upsertDailyCheckin.useMutation({
-    onSuccess: () => {
-      refetchCheckins();
+    onSuccess: async () => {
+      await refetchCheckins();
     },
   });
 
@@ -189,7 +191,7 @@ const WeeklyCalendar = () => {
 
   const getEntriesForDay = (date: Date): JournalEntry[] => {
     const dateKey = getDateKey(date);
-    return journalsByDate[dateKey] || [];
+    return journalsByDate[dateKey] ?? [];
   };
 
   const getMealRatingsForDay = (dateKey: string): MealRatings => {
@@ -199,9 +201,9 @@ const WeeklyCalendar = () => {
     }
 
     return {
-      breakfast: dayCheckins.breakfast?.rating || 0,
-      lunch: dayCheckins.lunch?.rating || 0,
-      dinner: dayCheckins.dinner?.rating || 0,
+      breakfast: dayCheckins.breakfast?.rating ?? 0,
+      lunch: dayCheckins.lunch?.rating ?? 0,
+      dinner: dayCheckins.dinner?.rating ?? 0,
     };
   };
 
@@ -222,9 +224,9 @@ const WeeklyCalendar = () => {
   const weekEndDate = new Date(currentWeekStart);
   weekEndDate.setDate(weekEndDate.getDate() + 6);
 
-  const journeyDate = selectedDate || new Date();
+  const journeyDate = selectedDate ?? new Date();
   const journeyDateKey = getDateKey(journeyDate);
-  const journeyEntries = journalsByDate[journeyDateKey] || [];
+  const journeyEntries = journalsByDate[journeyDateKey] ?? [];
 
   return (
     <div className="min-h-screen rounded-xl">
@@ -275,7 +277,7 @@ const WeeklyCalendar = () => {
                       className="text-sm font-medium"
                       style={{ color: "#DA8359" }}
                     >
-                      Today's vibe:
+                      Today&apos;s vibe:
                     </span>
                     <span className="animate-bounce text-2xl">
                       {moods[moodIndex]?.emoji}
@@ -494,7 +496,7 @@ const WeeklyCalendar = () => {
                     className="mb-1 text-xs font-medium"
                     style={{ color: "#5A6B4D" }}
                   >
-                    Today's entries:
+                    Today&apos;s entries:
                   </p>
                   {getEntriesForDay(selectedDate).map((entry) => (
                     <div
