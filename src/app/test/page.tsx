@@ -1,5 +1,5 @@
 "use client";
-import { TRPCError, type inferProcedureOutput } from "@trpc/server";
+import { type inferProcedureOutput } from "@trpc/server";
 import type { appRouter } from "@/server/api/root";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -7,7 +7,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { useState } from "react";
 import { api } from "@/trpc/react";
 import { TRPCClientError } from "@trpc/client";
-import { c } from "node_modules/framer-motion/dist/types.d-Cjd591yU";
 type UserPet = inferProcedureOutput<(typeof appRouter)["llm"]["findFirstPet"]>;
 
 type Props = {
@@ -17,7 +16,7 @@ const Page = ({ pet }: Props) => {
   const [query, setQuery] = useState<string>("");
   const [LLMResponse, setLLMResponse] = useState<string>("");
 
-  const { data, isLoading, refetch } = api.llm.chat.useQuery(
+  const { isLoading, refetch } = api.llm.chat.useQuery(
     {
       message: query,
     },
@@ -26,9 +25,9 @@ const Page = ({ pet }: Props) => {
 
   const handleSubmit = async () => {
     try {
-      const { data, error } = await refetch();
-
-      if (error) throw error;
+      const { data } = await refetch({
+        throwOnError: true,
+      });
 
       if (data) setLLMResponse(data);
     } catch (e) {
@@ -36,7 +35,9 @@ const Page = ({ pet }: Props) => {
       if (e instanceof TRPCClientError) {
         setLLMResponse(e.message);
 
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         if (e?.data?.zodError?.fieldErrors?.message?.length > 0)
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
           setLLMResponse(e.data.zodError.fieldErrors.message[0]);
       }
     }
