@@ -6,7 +6,7 @@ import { useSearchParams } from "next/navigation";
 
 const DrawerContent = () => {
   const searchParams = useSearchParams();
-  const tab = searchParams.get("tab") as "diary" | "activities" | "farm" | null;
+  const tab = searchParams.get("tab") as "diary" | "activities" | null;
 
   return (
     <Tabs defaultValue={tab ?? "diary"} className="w-full">
@@ -24,34 +24,16 @@ const DrawerContent = () => {
         >
           activities
         </TabsTrigger>
-
-        <TabsTrigger
-          value="farm"
-          className="flex-1 text-slate-400 data-[state=active]:text-[1.01rem] data-[state=active]:text-black data-[state=active]:shadow-none"
-        >
-          farm
-        </TabsTrigger>
       </TabsList>
 
       <TabsContent value="diary">
-        <div className="max-h-[calc(100vh-30rem)]">
+        <div className="scrollbar-hidden max-h-[calc(100vh-6rem)] overflow-y-auto">
           <WeeklyCalendar />
         </div>
       </TabsContent>
 
       <TabsContent value="activities">
-        <div className="max-h-[calc(100vh-30rem)]">
-          <ActivitiesList
-            onNavigate={function (screen: "home" | "meditation"): void {
-              throw new Error("Function not implemented.");
-            }}
-          />
-        </div>
-      </TabsContent>
-
-      <TabsContent value="farm">
-        <div className="max-h-[calc(100vh-30rem)]">
-          <h1>putting activities component here for placeholder for farm</h1>
+        <div className="scrollbar-hidden max-h-[calc(100vh-6rem)] overflow-y-auto">
           <ActivitiesList
             onNavigate={function (screen: "home" | "meditation"): void {
               throw new Error("Function not implemented.");

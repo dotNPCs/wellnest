@@ -87,7 +87,6 @@ const PetSprite = forwardRef<PetSpriteRef, { pet: UserPet; mood?: string }>(
         setIsManualAnimation(true);
         idleManagerRef.current?.stop();
 
-        console.log(`Triggering animation: ${animationName}`);
         playAnimation(animationName);
 
         // Return to idle after specified duration
@@ -99,43 +98,21 @@ const PetSprite = forwardRef<PetSpriteRef, { pet: UserPet; mood?: string }>(
       [playAnimation],
     );
 
-    // Expose trigger methods via ref
-    useImperativeHandle(
-      ref,
-      () => ({
-        triggerEating: () => triggerAnimation("lickPawSitFront", 3000),
-        triggerMeow: () => triggerAnimation("meowSitFront", 2000),
-        triggerScratch: () => triggerAnimation("sitFrontScratch", 2500),
-        triggerYawn: () => triggerAnimation("yawnSitFront", 2000),
-        triggerPawSwipe: () => triggerAnimation("rightPawSwipeSitFront", 2000),
-        triggerLickPaw: () => triggerAnimation("lickPawLieFront", 3000),
-        triggerHiss: () => triggerAnimation("hissFront", 2000),
-        triggerSleep: () => {
-          setIsManualAnimation(true);
-          idleManagerRef.current?.stop();
-          playAnimation("sleepLieFront");
-        },
-        resumeIdle: () => {
-          setIsManualAnimation(false);
-          idleManagerRef.current?.start();
-        },
-      }),
-      [triggerAnimation, playAnimation],
-    );
-
     return (
       <div
         ref={petRef}
         className="absolute -bottom-5 left-1/2 z-10 -translate-x-1/2 transform"
         onClick={() => {
-          pet.familiarity > 25
-            ? triggerAnimation("meowSitFront")
-            : triggerAnimation("hissFront");
+          idleManagerRef.current?.isInNightMode() &&
+            (pet.familiarity > 25
+              ? triggerAnimation("meowSitFront")
+              : triggerAnimation("hissFront"));
         }} // desktop click
         onTouchStart={() =>
-          pet.familiarity > 25
+          idleManagerRef.current?.isInNightMode() &&
+          (pet.familiarity > 25
             ? triggerAnimation("meowSitFront")
-            : triggerAnimation("hissFront")
+            : triggerAnimation("hissFront"))
         } // mobile touch
       >
         <div className="relative">

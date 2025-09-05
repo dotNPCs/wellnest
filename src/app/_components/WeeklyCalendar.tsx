@@ -3,277 +3,243 @@
 import { useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { type JournalEntry } from "@prisma/client";
+import { api } from "@/trpc/react";
+import { UserMood, MealType } from "@prisma/client"; // Adjust import path
+import { useSwipeable } from "react-swipeable";
+import {
+  format,
+  startOfWeek,
+  endOfWeek,
+  addWeeks,
+  subWeeks,
+  startOfDay,
+} from "date-fns";
 
-interface DiaryEntry {
-  id: string;
-  text: string;
-  timestamp: Date;
-  mealRatings?: { breakfast: number; lunch: number; dinner: number };
-  moodIndex?: number;
+interface MealRatings {
+  breakfast: number;
+  lunch: number;
+  dinner: number;
 }
 
 const WeeklyCalendar = () => {
-    const [currentWeekStart, setCurrentWeekStart] = useState(() => {
+  const [currentWeekStart, setCurrentWeekStart] = useState(() => {
     const today = new Date();
-    const day = today.getDay();
-    const diff = today.getDate() - day + (day === 0 ? -6 : 1);
-    return new Date(today.setDate(diff));
+    return startOfWeek(today, { weekStartsOn: 1 }); // Start week on Monday
   });
   const [displayedWeek, setDisplayedWeek] = useState(currentWeekStart);
   const [swipeDirection, setSwipeDirection] = useState(0);
-  const [moodStates, setMoodStates] = useState<{ [key: string]: number }>({});
-  const [touchStart, setTouchStart] = useState(0);
-  const [touchEnd, setTouchEnd] = useState(0);
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
 
-  const [diaryEntries, setDiaryEntries] = useState<{
-      [key: string]: DiaryEntry[];
-    }>({
-      // Sample entries for previous days
-      "2025-09-01": [
-        {
-          id: "1",
-          text: "Had a great breakfast today!",
-          timestamp: new Date("2025-09-01T08:30"),
-          moodIndex: 0, // 😊 Happy
-          mealRatings: { breakfast: 3, lunch: 2, dinner: 4 } // random ratings
-        },
-        {
-          id: "2",
-          text: "Went for a walk in the evening.",
-          timestamp: new Date("2025-09-01T18:00"),
-          moodIndex: 2, // 🙂 Content
-          mealRatings: { breakfast: 3, lunch: 2, dinner: 4 } // same day, can repeat or vary
-        }
-      ],
-      "2025-09-02": [
-        {
-          id: "3",
-          text: "Feeling stressed at work.",
-          timestamp: new Date("2025-09-02T12:00"),
-          moodIndex: 4, // 😩 Stressed
-          mealRatings: { breakfast: 1, lunch: 2, dinner: 3 } // random
-        }
-      ]
-    });
-
-
-// Initialize calendar moods from diary entries
-useEffect(() => {
-  const initialMoodStates: { [key: string]: number } = {};
-
-  Object.entries(diaryEntries).forEach(([dateKey, entries]) => {
-    const lastEntry = entries[entries.length - 1];
-    if (lastEntry?.moodIndex !== undefined) {
-      initialMoodStates[dateKey] = lastEntry.moodIndex;
-    }
-  });
-
-  setMoodStates(initialMoodStates);
-}, []);
-
-
-
-
+  // Modal state
   const [showDiaryInput, setShowDiaryInput] = useState(false);
   const [currentDiaryText, setCurrentDiaryText] = useState("");
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedMoodIndex, setSelectedMoodIndex] = useState<number | null>(
     null,
   );
 
-  useEffect(() => {
-      setDisplayedWeek(currentWeekStart);
-    }, [currentWeekStart]);
+  const [isCreatingJournal, setIsCreatingJournal] = useState(false);
 
+  // Calculate week end for queries
+  const weekStart = startOfWeek(displayedWeek, { weekStartsOn: 1 });
+  const weekEnd = endOfWeek(displayedWeek, { weekStartsOn: 1 });
+
+  // tRPC queries
+  const { data: journalsByDate = {}, refetch: refetchJournals } =
+    api.journal.getJournalsByDateRange.useQuery({
+      startDate: weekStart,
+      endDate: weekEnd,
+    });
+
+  const { data: checkinsByDate = {}, refetch: refetchCheckins } =
+    api.journal.getDailyCheckins.useQuery({
+      startDate: weekStart,
+      endDate: weekEnd,
+    });
+
+  const { data: moodStates = {}, refetch: refetchMoods } =
+    api.journal.getMoodStates.useQuery({
+      startDate: weekStart,
+      endDate: weekEnd,
+    });
+
+  // Mutations
+  const createJournal = api.journal.createJournal.useMutation({
+    onMutate: async (newEntry) => {
+      setIsCreatingJournal(true);
+    },
+
+    onSuccess: () => {
+      setIsCreatingJournal(false);
+      refetchJournals();
+      refetchMoods();
+    },
+    onSettled: () => {
+      setIsCreatingJournal(false);
+    },
+  });
+
+  const upsertCheckin = api.journal.upsertDailyCheckin.useMutation({
+    onSuccess: () => {
+      refetchCheckins();
+    },
+  });
+
+  useEffect(() => {
+    setDisplayedWeek(currentWeekStart);
+  }, [currentWeekStart]);
+
+  // Mood mapping - you'll need to map your UserMood enum to these
   const moods = [
-    { emoji: "😊", label: "Happy" },
-    { emoji: "😐", label: "Neutral" },
-    { emoji: "🙂", label: "Content" },
-    { emoji: "🤩", label: "Excited" },
-    { emoji: "😩", label: "Stressed" },
-    { emoji: "🙏", label: "Grateful" },
-    { emoji: "😌", label: "Calm" },
-    { emoji: "😰", label: "Anxious" },
-    { emoji: "😃", label: "Energetic" },
-    { emoji: "😴", label: "Tired" }
+    { emoji: "😊", label: "Happy", value: "HAPPY" },
+    { emoji: "😐", label: "Neutral", value: "NEUTRAL" },
+    { emoji: "🙂", label: "Content", value: "CONTENT" },
+    { emoji: "🤩", label: "Excited", value: "EXCITED" },
+    { emoji: "😩", label: "Stressed", value: "STRESSED" },
+    { emoji: "🙏", label: "Grateful", value: "GRATEFUL" },
+    { emoji: "😌", label: "Calm", value: "CALM" },
+    { emoji: "😰", label: "Anxious", value: "ANXIOUS" },
+    { emoji: "😃", label: "Energetic", value: "ENERGETIC" },
+    { emoji: "😴", label: "Tired", value: "TIRED" },
   ];
 
   const nextWeek = () => {
-      setSwipeDirection(1); // left
-      setCurrentWeekStart(prev => {
-        const newDate = new Date(prev);
-        newDate.setDate(newDate.getDate() + 7);
-        return newDate;
-      });
+    setSwipeDirection(1);
+    setCurrentWeekStart((prev) => addWeeks(prev, 1));
   };
 
   const prevWeek = () => {
-      setSwipeDirection(-1); // right
-      setCurrentWeekStart(prev => {
-        const newDate = new Date(prev);
-        newDate.setDate(newDate.getDate() - 7);
-        return newDate;
-      });
+    setSwipeDirection(-1);
+    setCurrentWeekStart((prev) => subWeeks(prev, 1));
   };
 
-  // Handle touch events for swipe
-  const handleTouchStart = (e: any) => {
-    setTouchEnd(0); // Reset
-    setTouchStart(e.targetTouches[0].clientX);
-  };
-
-  const handleTouchMove = (e: any) => {
-    setTouchEnd(e.targetTouches[0].clientX);
-  };
-
-  const handleTouchEnd = () => {
-    if (!touchStart || !touchEnd) return;
-    const distance = touchStart - touchEnd;
-    const isLeftSwipe = distance > 50;
-    const isRightSwipe = distance < -50;
-
-    if (isLeftSwipe) {
-      nextWeek();
-    }
-    if (isRightSwipe) {
-      prevWeek();
-    }
-  };
+  const handlers = useSwipeable({
+    onSwipedLeft: () => nextWeek(),
+    onSwipedRight: () => prevWeek(),
+    trackMouse: true,
+  });
 
   const getDaysInWeek = (weekStart: Date): Date[] => {
-      const days: Date[] = [];
-      for (let i = 0; i < 7; i++) {
-        const day = new Date(weekStart);
-        day.setDate(day.getDate() + i);
-        days.push(day);
-      }
-      return days;
+    const days: Date[] = [];
+    for (let i = 0; i < 7; i++) {
+      const day = new Date(weekStart);
+      day.setDate(day.getDate() + i);
+      days.push(day);
+    }
+    return days;
   };
 
   const isToday = (date: Date) => {
     const today = new Date();
-    return date.toDateString() === today.toDateString();
+    return format(date, "yyyy-MM-dd") === format(today, "yyyy-MM-dd");
   };
 
-  const formatDate = (date: Date, format: string): string => {
-    if (format === "EEE") {
-      return date.toLocaleDateString("en", { weekday: "short" });
+  const formatDate = (date: Date, formatStr: string): string => {
+    if (formatStr === "EEE") {
+      return format(date, "EEE");
     }
-    if (format === "dd") {
-      return date.getDate().toString().padStart(2, "0");
+    if (formatStr === "dd") {
+      return format(date, "dd");
     }
-    if (format === "MMM dd") {
-      return date.toLocaleDateString("en", { month: "short", day: "2-digit" });
+    if (formatStr === "MMM dd") {
+      return format(date, "MMM dd");
     }
     return "";
   };
 
   const formatTime = (date: Date): string => {
-    return date.toLocaleTimeString("en", {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: true,
-    });
+    return format(date, "h:mm a");
   };
 
   const getDateKey = (date: Date): string => {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
-    return `${year}-${month}-${day}`;
+    return format(date, "yyyy-MM-dd");
   };
 
   const openDiaryInput = (date: Date) => {
-      setSelectedDate(date);
-      setCurrentDiaryText(""); // Clear input for new entries
-      setSelectedMoodIndex(null);
-      setShowDiaryInput(true);
-   };
+    setSelectedDate(date);
+    setCurrentDiaryText("");
+    setSelectedMoodIndex(null);
+    setShowDiaryInput(true);
+  };
 
-  const addDiaryEntry = () => {
-      if (!selectedDate || !isToday(selectedDate) || !currentDiaryText.trim()) return;
+  const addDiaryEntry = async () => {
+    if (!selectedDate || !isToday(selectedDate) || !currentDiaryText.trim())
+      return;
 
-      const dateKey = getDateKey(selectedDate);
+    const moodValue =
+      selectedMoodIndex !== null
+        ? (moods[selectedMoodIndex]?.value as UserMood)
+        : undefined;
 
-      const newEntry: DiaryEntry = {
-        id: crypto.randomUUID(),
-        text: currentDiaryText.trim(), // store raw text
-        timestamp: new Date(),
-        moodIndex: selectedMoodIndex ?? undefined,
-      };
-
-      setDiaryEntries(prev => ({
-        ...prev,
-        [dateKey]: [...(prev[dateKey] || []), newEntry],
-      }));
-
-      if (selectedMoodIndex !== null) {
-        setMoodStates(prev => ({
-          ...prev,
-          [dateKey]: selectedMoodIndex,
-        }));
-      }
+    try {
+      await createJournal.mutateAsync({
+        content: currentDiaryText.trim(),
+        mood: moodValue,
+        createdAt: new Date(),
+      });
 
       setCurrentDiaryText("");
       setShowDiaryInput(false);
-      setSelectedDate(null);
+      setSelectedDate(new Date());
       setSelectedMoodIndex(null);
+    } catch (error) {
+      console.error("Failed to create journal entry:", error);
+    }
   };
 
-
-
-
-
-
-  const getEntriesForDay = (date: Date): DiaryEntry[] => {
+  const getEntriesForDay = (date: Date): JournalEntry[] => {
     const dateKey = getDateKey(date);
-    return diaryEntries[dateKey] || [];
+    return journalsByDate[dateKey] || [];
   };
 
-  const getAllEntriesSorted = (): {
-    dateKey: string;
-    entries: DiaryEntry[];
-  }[] => {
-    return Object.entries(diaryEntries)
-      .filter(([_, entries]) => entries.length > 0)
-      .sort(([a], [b]) => new Date(b).getTime() - new Date(a).getTime())
-      .map(([dateKey, entries]) => ({ dateKey, entries }));
+  const getMealRatingsForDay = (dateKey: string): MealRatings => {
+    const dayCheckins = checkinsByDate[dateKey];
+    if (!dayCheckins) {
+      return { breakfast: 0, lunch: 0, dinner: 0 };
+    }
+
+    return {
+      breakfast: dayCheckins.breakfast?.rating || 0,
+      lunch: dayCheckins.lunch?.rating || 0,
+      dinner: dayCheckins.dinner?.rating || 0,
+    };
+  };
+
+  useEffect(() => {
+    console.log("isCreatingJournal changed:", isCreatingJournal);
+  }, [isCreatingJournal]);
+
+  useEffect(() => {
+    console.log("selectedDate changed:", selectedDate);
+  }, [selectedDate]);
+
+  const getMoodIndexFromValue = (moodValue: UserMood): number => {
+    const index = moods.findIndex((mood) => mood.value === moodValue);
+    return index !== -1 ? index : 0;
   };
 
   const days = getDaysInWeek(displayedWeek);
   const weekEndDate = new Date(currentWeekStart);
   weekEndDate.setDate(weekEndDate.getDate() + 6);
 
-  const journeyDate = selectedDate || new Date(); // show today if none selected
+  const journeyDate = selectedDate || new Date();
   const journeyDateKey = getDateKey(journeyDate);
-  const journeyEntries = diaryEntries[journeyDateKey] || [];
-  const getMealRatingsForDay = (dateKey: string) => {
-      const entries = diaryEntries[dateKey];
-      if (!entries || entries.length === 0) {
-        return { breakfast: 0, lunch: 0, dinner: 0 }; // fallback
-      }
-
-      // Take the last entry with mealRatings, or fallback to 0
-      const lastWithRatings = [...entries].reverse().find(e => e.mealRatings);
-      return lastWithRatings?.mealRatings ?? { breakfast: 0, lunch: 0, dinner: 0 };
-  };
-
-
+  const journeyEntries = journalsByDate[journeyDateKey] || [];
 
   return (
     <div className="min-h-screen rounded-xl">
       <div className="flex w-full flex-col items-center p-2">
-        {/* Navigation - Compact for mobile */}
+        {/* Navigation */}
         <div className="mb-3 flex w-full items-center justify-between px-2">
           <button
             onClick={prevWeek}
             className="flex h-8 w-8 items-center justify-center rounded-full text-white shadow-md transition-all hover:scale-110 hover:shadow-lg"
-            style={{ backgroundColor: '#A5B68D' }}
+            style={{ backgroundColor: "#A5B68D" }}
           >
             <ChevronLeft className="h-4 w-4" />
           </button>
 
-          <div className="text-sm font-semibold" style={{ color: '#5A6B4D' }}>
+          <div className="text-sm font-semibold" style={{ color: "#5A6B4D" }}>
             {formatDate(currentWeekStart, "MMM dd")} -{" "}
             {formatDate(weekEndDate, "MMM dd")}
           </div>
@@ -281,7 +247,7 @@ useEffect(() => {
           <button
             onClick={nextWeek}
             className="flex h-8 w-8 items-center justify-center rounded-full text-white shadow-md transition-all hover:scale-110 hover:shadow-lg"
-            style={{ backgroundColor: '#A5B68D' }}
+            style={{ backgroundColor: "#A5B68D" }}
           >
             <ChevronRight className="h-4 w-4" />
           </button>
@@ -293,26 +259,38 @@ useEffect(() => {
           const todayKey = getDateKey(today);
           const todayMood = moodStates[todayKey];
 
-          if (todayMood !== undefined && moods[todayMood]) {
+          if (todayMood) {
+            const moodIndex = getMoodIndexFromValue(todayMood);
             return (
               <div className="mb-3 w-full px-2">
-                <div className="flex items-center justify-between rounded-lg p-3 shadow-sm"
-                     style={{ backgroundColor: '#FCFAEE', border: '2px solid #DA835950' }}>
+                <div
+                  className="flex items-center justify-between rounded-lg p-3 shadow-sm"
+                  style={{
+                    backgroundColor: "#FCFAEE",
+                    border: "2px solid #DA835950",
+                  }}
+                >
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium" style={{ color: '#DA8359' }}>
+                    <span
+                      className="text-sm font-medium"
+                      style={{ color: "#DA8359" }}
+                    >
                       Today's vibe:
                     </span>
                     <span className="animate-bounce text-2xl">
-                      {moods[todayMood].emoji}
+                      {moods[moodIndex]?.emoji}
                     </span>
-                    <span className="text-sm font-bold" style={{ color: '#C17349' }}>
-                      {moods[todayMood].label}
+                    <span
+                      className="text-sm font-bold"
+                      style={{ color: "#C17349" }}
+                    >
+                      {moods[moodIndex]?.label}
                     </span>
                   </div>
                   <button
                     onClick={() => openDiaryInput(today)}
                     className="rounded-full px-3 py-1 text-xs font-medium text-white transition-all hover:scale-105 hover:shadow-md"
-                    style={{ backgroundColor: '#DA8359' }}
+                    style={{ backgroundColor: "#DA8359" }}
                   >
                     Add Entry
                   </button>
@@ -323,49 +301,58 @@ useEffect(() => {
           return null;
         })()}
 
-        {/* Days Grid - Swipe + Smooth Animation */}
+        {/* Days Grid */}
         <AnimatePresence mode="wait">
           <motion.div
-              key={displayedWeek.toDateString()} // use displayedWeek instead of currentWeekStart
-              initial={{ x: swipeDirection * 300, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              exit={{ x: -swipeDirection * 300, opacity: 0 }}
-              transition={{ type: "spring", stiffness: 300, damping: 30 }}
-              onTouchStart={handleTouchStart}
-              onTouchMove={handleTouchMove}
-              onTouchEnd={handleTouchEnd}
-              className="w-full px-2"
+            key={displayedWeek.toDateString()}
+            initial={{ x: swipeDirection * 300, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: -swipeDirection * 300, opacity: 0 }}
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            {...handlers}
+            className="w-full px-2"
           >
             <div className="grid grid-cols-7 gap-1">
               {days.map((day) => {
                 const today = isToday(day);
                 const dayKey = getDateKey(day);
-                const moodIndex = moodStates[dayKey];
+                const dayMood = moodStates[dayKey];
                 const dayEntries = getEntriesForDay(day);
                 const hasEntries = dayEntries.length > 0;
 
                 return (
                   <div
                     key={day.toString()}
-                    className="flex flex-col items-center cursor-pointer"
-                    onClick={() => {
-                      setSelectedDate(day); // update "Your Journey" view
-                    }}
- // <--- make it clickable
+                    className="flex cursor-pointer flex-col items-center"
+                    onClick={() => setSelectedDate(day)}
                   >
                     {/* Day Card */}
                     <div
                       className={`w-full rounded-lg p-1 text-center shadow-sm transition-transform hover:scale-105 hover:shadow-md`}
                       style={
                         today
-                          ? { backgroundColor: "#F4DCC9", boxShadow: "0 0 0 2px #DA8359" }
-                          : { backgroundColor: "white" }
+                          ? {
+                              backgroundColor: "#F4DCC9",
+                              boxShadow: "0 0 0 2px #DA8359",
+                            }
+                          : getDateKey(selectedDate) === getDateKey(day)
+                            ? {
+                                backgroundColor: "#FCFAEE",
+                                border: "2px solid #A5B68D50",
+                              }
+                            : { backgroundColor: "white" }
                       }
                     >
-                      <div className="text-xs font-medium" style={{ color: "#5A6B4D" }}>
+                      <div
+                        className="text-xs font-medium"
+                        style={{ color: "#5A6B4D" }}
+                      >
                         {formatDate(day, "EEE").substring(0, 3)}
                       </div>
-                      <div className="text-sm font-bold" style={{ color: "#5A6B4D" }}>
+                      <div
+                        className="text-sm font-bold"
+                        style={{ color: "#5A6B4D" }}
+                      >
                         {formatDate(day, "dd")}
                       </div>
                     </div>
@@ -374,7 +361,7 @@ useEffect(() => {
                     <div className="relative mt-2">
                       {today ? (
                         <>
-                          {moodStates[dayKey] !== undefined ? (
+                          {dayMood ? (
                             <div
                               className="flex h-10 w-10 items-center justify-center rounded-full text-base shadow-md"
                               style={{
@@ -382,7 +369,7 @@ useEffect(() => {
                                 border: "2px solid #DA8359",
                               }}
                             >
-                              {moods[moodStates[dayKey]]?.emoji}
+                              {moods[getMoodIndexFromValue(dayMood)]?.emoji}
                             </div>
                           ) : (
                             <button
@@ -406,7 +393,9 @@ useEffect(() => {
                                 border: "2px solid #A5B68D50",
                               }}
                             >
-                              {moods[moodIndex ?? 0]?.emoji ?? "😐"}
+                              {dayMood
+                                ? moods[getMoodIndexFromValue(dayMood)]?.emoji
+                                : "-"}
                             </div>
                           ) : (
                             <div className="h-10 w-10 rounded-full border-2 border-gray-200 bg-gray-50"></div>
@@ -431,13 +420,20 @@ useEffect(() => {
           </motion.div>
         </AnimatePresence>
 
-
         {/* Diary Input Modal */}
         {showDiaryInput && selectedDate && (
           <div className="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black p-4">
-            <div className="w-full max-w-sm rounded-2xl p-4 shadow-xl"
-                 style={{ backgroundColor: '#FCFAEE', border: '2px solid #A5B68D50' }}>
-              <h3 className="mb-1 text-base font-bold" style={{ color: '#5A6B4D' }}>
+            <div
+              className="w-full max-w-sm rounded-2xl p-4 shadow-xl"
+              style={{
+                backgroundColor: "#FCFAEE",
+                border: "2px solid #A5B68D50",
+              }}
+            >
+              <h3
+                className="mb-1 text-base font-bold"
+                style={{ color: "#5A6B4D" }}
+              >
                 Add Entry -{" "}
                 {selectedDate.toLocaleDateString("en", {
                   weekday: "short",
@@ -445,13 +441,19 @@ useEffect(() => {
                   day: "numeric",
                 })}
               </h3>
-              <p className="mb-3 text-xs" style={{ color: '#5A6B4D', opacity: 0.7 }}>
+              <p
+                className="mb-3 text-xs"
+                style={{ color: "#5A6B4D", opacity: 0.7 }}
+              >
                 {formatTime(new Date())}
               </p>
 
               {/* Mood Selection */}
               <div className="mb-3">
-                <p className="mb-2 text-sm font-medium" style={{ color: '#5A6B4D' }}>
+                <p
+                  className="mb-2 text-sm font-medium"
+                  style={{ color: "#5A6B4D" }}
+                >
                   How are you feeling?
                 </p>
                 <div className="grid grid-cols-5 gap-2">
@@ -464,9 +466,13 @@ useEffect(() => {
                           ? "scale-110 shadow-md"
                           : "hover:opacity-80"
                       }`}
-                      style={selectedMoodIndex === index ?
-                        { backgroundColor: '#F4DCC9', boxShadow: '0 0 0 2px #DA8359' } :
-                        { backgroundColor: 'white' }
+                      style={
+                        selectedMoodIndex === index
+                          ? {
+                              backgroundColor: "#F4DCC9",
+                              boxShadow: "0 0 0 2px #DA8359",
+                            }
+                          : { backgroundColor: "white" }
                       }
                     >
                       <div className="text-2xl">{mood.emoji}</div>
@@ -479,59 +485,69 @@ useEffect(() => {
               </div>
 
               {/* Show existing entries for this day */}
-                {selectedDate && getEntriesForDay(selectedDate).length > 0 && (
-                  <div className="mb-3 max-h-32 overflow-y-auto pt-2" style={{ borderTop: '2px solid #A5B68D50' }}>
-                    <p className="mb-1 text-xs font-medium" style={{ color: '#5A6B4D' }}>
-                      Today's entries:
-                    </p>
-                    {getEntriesForDay(selectedDate).map((entry) => (
-                      <div key={entry.id} className="mb-1 rounded bg-white p-2 text-xs">
-                        <span className="font-bold" style={{ color: '#5A6B4D' }}>
-                          {formatTime(entry.timestamp)}
-                        </span>
-                        <span className="ml-2" style={{ color: '#5A6B4D', opacity: 0.8 }}>
-                          {entry.text.substring(0, 50)}
-                          {entry.text.length > 50 ? "..." : ""}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
+              {selectedDate && getEntriesForDay(selectedDate).length > 0 && (
+                <div
+                  className="mb-3 max-h-32 overflow-y-auto pt-2"
+                  style={{ borderTop: "2px solid #A5B68D50" }}
+                >
+                  <p
+                    className="mb-1 text-xs font-medium"
+                    style={{ color: "#5A6B4D" }}
+                  >
+                    Today's entries:
+                  </p>
+                  {getEntriesForDay(selectedDate).map((entry) => (
+                    <div
+                      key={entry.id}
+                      className="mb-1 rounded bg-white p-2 text-xs"
+                    >
+                      <span className="font-bold" style={{ color: "#5A6B4D" }}>
+                        {formatTime(entry.createdAt)}
+                      </span>
+                      <span
+                        className="ml-2"
+                        style={{ color: "#5A6B4D", opacity: 0.8 }}
+                      >
+                        {entry.content.substring(0, 50)}
+                        {entry.content.length > 50 ? "..." : ""}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
 
               <textarea
-                  value={currentDiaryText}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    // Limit input length to 500 characters
-                    if (value.length <= 500) {
-                      setCurrentDiaryText(value);
-                    }
-                  }}
-                  placeholder="How was your day? ✨"
-                  className="h-24 w-full resize-none rounded-lg bg-white p-2 text-sm focus:outline-none"
-                  style={{ border: '2px solid #A5B68D50' }}
-                  autoFocus
+                value={currentDiaryText}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (value.length <= 500) {
+                    setCurrentDiaryText(value);
+                  }
+                }}
+                placeholder="How was your day? ✨"
+                className="h-24 w-full resize-none rounded-lg bg-white p-2 text-sm focus:outline-none"
+                style={{ border: "2px solid #A5B68D50" }}
+                autoFocus
               />
-
 
               <div className="mt-3 flex gap-2">
                 <button
                   onClick={addDiaryEntry}
-                  className="flex-1 rounded-lg px-3 py-2 text-sm font-bold text-white shadow-md transition-all hover:opacity-90"
-                  style={{ backgroundColor: '#A5B68D' }}
+                  disabled={isCreatingJournal}
+                  className="flex-1 rounded-lg px-3 py-2 text-sm font-bold text-white shadow-md transition-all hover:opacity-90 disabled:opacity-50"
+                  style={{ backgroundColor: "#A5B68D" }}
                 >
-                  Save
+                  {isCreatingJournal ? "Saving..." : "Save"}
                 </button>
                 <button
                   onClick={() => {
                     setShowDiaryInput(false);
                     setCurrentDiaryText("");
-                    setSelectedDate(null);
+                    setSelectedDate(new Date());
                     setSelectedMoodIndex(null);
                   }}
                   className="flex-1 rounded-lg px-3 py-2 text-sm font-bold text-white transition-all hover:opacity-90"
-                  style={{ backgroundColor: '#DA8359' }}
+                  style={{ backgroundColor: "#DA8359" }}
                 >
                   Cancel
                 </button>
@@ -540,76 +556,108 @@ useEffect(() => {
           </div>
         )}
 
-        {/* Diary Entries Display - Mobile optimized */}
-        {getAllEntriesSorted().length > 0 && (
-          <div className="mt-6 w-full px-2 pb-4 flex-1" style={{ overflowY: 'auto', minHeight: 0 }}>
-              <h3 className="mb-3 text-lg font-bold sticky top-0 bg-white py-2 z-10" style={{ color: '#5A6B4D', backgroundColor: 'rgba(255,255,255,0.95)' }}>
-                Your Journey 🌟 - {journeyDate.toLocaleDateString("en", { weekday: "long", month: "short", day: "numeric" })}
-              </h3>
+        {/* Diary Entries Display */}
+        {journeyEntries.length > 0 && (
+          <div className="mt-6 w-full px-2 pb-4">
+            <h3 className="mb-3 text-lg font-bold" style={{ color: "#5A6B4D" }}>
+              Your Journey 🌟 -{" "}
+              {journeyDate.toLocaleDateString("en", {
+                weekday: "long",
+                month: "short",
+                day: "numeric",
+              })}
+            </h3>
 
-                {/* Daily Meal Ratings */}
-                {journeyEntries.length > 0 && (
-                  (() => {
-                    const ratings = getMealRatingsForDay(journeyDateKey);
+            {/* Daily Meal Ratings */}
+            {(() => {
+              const ratings = getMealRatingsForDay(journeyDateKey);
+              const hasRatings =
+                ratings.breakfast > 0 ||
+                ratings.lunch > 0 ||
+                ratings.dinner > 0;
 
-                    const mealLabels: { [key in keyof typeof ratings]: string } = {
-                      breakfast: "Breakfast",
-                      lunch: "Lunch",
-                      dinner: "Dinner",
-                    };
+              if (!hasRatings) return null;
+
+              const mealLabels: { [key in keyof typeof ratings]: string } = {
+                breakfast: "Breakfast",
+                lunch: "Lunch",
+                dinner: "Dinner",
+              };
+
+              return (
+                <div className="mb-2 flex flex-col gap-1 text-[10px] text-gray-500">
+                  {(["breakfast", "lunch", "dinner"] as const).map((meal) => {
+                    const rating = ratings[meal];
+                    const label = mealLabels[meal];
+
+                    if (rating === 0) return null;
 
                     return (
-                      <div className="mb-2 flex flex-col gap-1 text-[10px] text-gray-500">
-                        {( ["breakfast", "lunch", "dinner"] as const ).map(meal => {
-                          const rating = ratings[meal];
-                          const label = mealLabels[meal];
-
-                          return (
-                            <div key={meal} className="flex items-center gap-1">
-                              <span className="w-12">{label}:</span>
-                              {[...Array(5)].map((_, i) => (
-                                <span
-                                  key={i}
-                                  className={`${i < rating ? 'opacity-100' : 'opacity-30'}`}
-                                >
-                                  ⭐
-                                </span>
-
-                              ))}
-                            </div>
-                          );
-                        })}
+                      <div key={meal} className="flex items-center gap-1">
+                        <span className="w-12">{label}:</span>
+                        {[...Array(5)].map((_, i) => (
+                          <span
+                            key={i}
+                            className={`${i < rating ? "opacity-100" : "opacity-30"}`}
+                          >
+                            ⭐
+                          </span>
+                        ))}
                       </div>
                     );
-                  })()
-                )}
+                  })}
+                </div>
+              );
+            })()}
 
-
-
-              <div className="space-y-2" style={{ paddingBottom: '40vh' }}>
-                {journeyEntries
-                  .sort((a,b) => b.timestamp.getTime() - a.timestamp.getTime())
-                  .map(entry => (
+            <div className="space-y-2">
+              {journeyEntries
+                .sort(
+                  (a: JournalEntry, b: JournalEntry) =>
+                    new Date(b.createdAt).getTime() -
+                    new Date(a.createdAt).getTime(),
+                )
+                .map((entry: JournalEntry) => (
+                  <div
+                    key={entry.id}
+                    className="rounded-r pb-2 pl-3"
+                    style={{
+                      borderLeft: "4px solid #DA8359",
+                      backgroundColor: "#FCFAEE",
+                    }}
+                  >
                     <div
-                      key={entry.id}
-                      className="rounded-r pl-3 pb-2"
-                      style={{ borderLeft: '4px solid #DA8359', backgroundColor: '#FCFAEE' }}
+                      className="mb-1 flex items-center text-xs font-medium"
+                      style={{ color: "#DA8359" }}
                     >
-                      <div className="mb-1 flex items-center text-xs font-medium" style={{ color: '#DA8359' }}>
-                        {formatTime(entry.timestamp)}
-                        {(() => {
-                          const mood = typeof entry.moodIndex === "number" ? moods[entry.moodIndex] : undefined;
-                          return mood ? <span className="ml-2 text-lg">{mood.emoji}</span> : null;
-                        })()}
-
-                      </div>
-                      <div className="text-sm break-words" style={{ color: '#5A6B4D', overflowWrap: 'break-word', wordBreak: 'break-word' }}>
-                          {entry.text}
-                      </div>
+                      {formatTime(new Date(entry.createdAt))}
+                      {entry.mood && (
+                        <span className="ml-2 text-lg">
+                          {moods[getMoodIndexFromValue(entry.mood)]?.emoji}
+                        </span>
+                      )}
                     </div>
-                  ))
-                }
-              </div>
+                    <div
+                      className="text-sm whitespace-pre-wrap"
+                      style={{ color: "#5A6B4D" }}
+                    >
+                      {entry.content
+                        .split("\n")
+                        .map((line: string, idx: number) => (
+                          <span key={idx}>
+                            {line}
+                            <br />
+                          </span>
+                        ))}
+                    </div>
+                  </div>
+                ))}
+            </div>
+          </div>
+        )}
+        {journeyEntries.length === 0 && (
+          <div className="mt-6 flex h-40 w-full flex-col items-center justify-center px-2 pb-4 text-center text-sm text-gray-500">
+            <p>No journal entries for this day.</p>
           </div>
         )}
       </div>

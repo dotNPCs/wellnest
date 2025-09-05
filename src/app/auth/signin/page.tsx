@@ -1,15 +1,77 @@
 "use client";
+import { useEffect, useRef } from "react";
+import { FaDiscord } from "react-icons/fa";
 import { signIn } from "next-auth/react";
-import { FaGoogle, FaDiscord } from "react-icons/fa";
+import { gsap } from "gsap";
 
 const SignInPage = () => {
+  const skyRef = useRef(null);
+  const cloudsLayer1Ref = useRef(null);
+  const cloudsLayer2Ref = useRef(null);
+  const cloudsLayer3Ref = useRef(null);
+  const cardRef = useRef(null);
+
+  useEffect(() => {
+    // Import GSAP dynamically
+
+    // Animate background layers
+    gsap.to(cloudsLayer1Ref.current, {
+      x: "-50%",
+      duration: 60,
+      ease: "none",
+      repeat: -1,
+    });
+
+    gsap.to(cloudsLayer2Ref.current, {
+      x: "-50%",
+      duration: 80,
+      ease: "none",
+      repeat: -1,
+    });
+
+    gsap.to(cloudsLayer3Ref.current, {
+      x: "-50%",
+      duration: 100,
+      ease: "none",
+      repeat: -1,
+    });
+
+    // Animate card entrance
+    gsap.fromTo(
+      cardRef.current,
+      {
+        opacity: 0,
+        y: 50,
+        scale: 0.9,
+      },
+      {
+        opacity: 1,
+        y: 0,
+        scale: 1,
+        duration: 1.2,
+        ease: "power3.out",
+        delay: 0.3,
+      },
+    );
+
+    // Subtle floating animation for the card
+    gsap.to(cardRef.current, {
+      y: -10,
+      duration: 3,
+      ease: "sine.inOut",
+      repeat: -1,
+      yoyo: true,
+      delay: 1.5,
+    });
+  }, []);
+
   return (
     <div className="relative flex min-h-screen w-full flex-col items-center justify-center overflow-hidden bg-gradient-to-br from-[#fdfcf8] via-white to-[#e1db92]/20">
       {/* Background decorative elements */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -left-32 -top-32 h-96 w-96 rounded-full bg-[#d7a43f]/10 blur-3xl" />
-        <div className="absolute -bottom-32 -right-32 h-96 w-96 rounded-full bg-[#6a5a43]/10 blur-3xl" />
-        <div className="absolute left-1/2 top-1/3 h-64 w-64 -translate-x-1/2 rounded-full bg-[#e1db92]/20 blur-2xl" />
+        <div className="absolute -top-32 -left-32 h-96 w-96 rounded-full bg-[#d7a43f]/10 blur-3xl" />
+        <div className="absolute -right-32 -bottom-32 h-96 w-96 rounded-full bg-[#6a5a43]/10 blur-3xl" />
+        <div className="absolute top-1/3 left-1/2 h-64 w-64 -translate-x-1/2 rounded-full bg-[#e1db92]/20 blur-2xl" />
       </div>
 
       {/* Main content container */}
@@ -60,26 +122,33 @@ const SignInPage = () => {
           {/* Welcome message */}
           <div className="text-center">
             <p className="text-sm font-medium text-[#6a5a43]">Welcome back!</p>
-            <p className="text-xs text-[#6a5a43]/70">Sign in to continue your wellness journey</p>
+            <p className="text-xs text-[#6a5a43]/70">
+              Sign in to continue your wellness journey
+            </p>
           </div>
 
           {/* Discord sign-in button */}
           <button
             onClick={() => signIn("discord", {})}
-            className="group relative w-full overflow-hidden rounded-xl bg-gradient-to-r from-[#6a5a43] to-[#7a6a53] px-6 py-4 font-semibold text-white shadow-lg shadow-[#6a5a43]/20 transition-all hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]"
+            className="group relative w-full overflow-hidden rounded-xl bg-gradient-to-r from-[#6a5a43] to-[#7a6a53] px-6 py-4 font-semibold text-white shadow-lg shadow-[#6a5a43]/20 transition-all hover:scale-[1.02] hover:shadow-xl active:scale-[0.98]"
           >
             <span className="relative z-10 flex items-center justify-center gap-3">
-              <FaDiscord size={22} className="transition-transform group-hover:rotate-12" />
+              <FaDiscord
+                size={22}
+                className="transition-transform group-hover:rotate-12"
+              />
               <span className="text-base">Sign in with Discord</span>
             </span>
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent transition-transform duration-700 ease-out translate-x-[-100%] group-hover:translate-x-[100%]" />
+            <div className="absolute inset-0 translate-x-[-100%] bg-gradient-to-r from-transparent via-white/20 to-transparent transition-transform duration-700 ease-out group-hover:translate-x-[100%]" />
           </button>
 
           {/* Alternative sign-in hint */}
           <div className="mt-6 flex items-center gap-2">
-            <div className="flex-1 h-[1px] bg-gradient-to-r from-transparent via-[#d7a43f]/30 to-transparent" />
-            <p className="text-xs font-medium text-[#6a5a43]/60">Secure authentication</p>
-            <div className="flex-1 h-[1px] bg-gradient-to-r from-transparent via-[#d7a43f]/30 to-transparent" />
+            <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent via-[#d7a43f]/30 to-transparent" />
+            <p className="text-xs font-medium text-[#6a5a43]/60">
+              Secure authentication
+            </p>
+            <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent via-[#d7a43f]/30 to-transparent" />
           </div>
         </div>
 
@@ -95,8 +164,13 @@ const SignInPage = () => {
       </div>
 
       {/* Bottom decorative element */}
-      <div className="absolute bottom-0 left-0 right-0">
-        <svg className="w-full" height="120" viewBox="0 0 1440 120" preserveAspectRatio="none">
+      <div className="absolute right-0 bottom-0 left-0">
+        <svg
+          className="w-full"
+          height="120"
+          viewBox="0 0 1440 120"
+          preserveAspectRatio="none"
+        >
           <path
             d="M0,64 C240,96 480,32 720,64 C960,96 1200,32 1440,64 L1440,120 L0,120 Z"
             fill="url(#gradient)"
