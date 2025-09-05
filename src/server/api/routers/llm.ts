@@ -35,6 +35,190 @@ export const LLMRouter = createTRPCRouter({
   ping: publicProcedure.query(() => {
     return "pong!";
   }),
+  triggerPersonaUpdateWithInput: protectedProcedure
+    .input(
+      z.object({
+        message: z.string().nonempty(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { message } = input;
+
+      const persona = await ctx.db.userPetPersona.findFirst({
+        where: {
+          pet: {
+            isActive: true,
+            userId: ctx.session.user.id,
+          },
+        },
+        select: {
+          personaJson: true,
+          id: true,
+        },
+      });
+
+      if (!persona)
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "No active pet persona found",
+        });
+
+      const { personaJson } = persona;
+
+      const prompt = getPersonaChangePrompt(message, personaJson as object);
+
+      const response = await ai.models.generateContent({
+        model,
+        config: {
+          ...config,
+          responseMimeType: "application/json",
+        },
+        contents: [{ role: "user", parts: [{ text: prompt }] }],
+      });
+
+      const changedPersona = tryParseToObject(response);
+
+      if (!changedPersona || typeof changedPersona !== "object") {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to parse changed persona response",
+        });
+      }
+
+      // Upsert UserPetPersona with changed persona
+      const updated_persona = await ctx.db.userPetPersona.update({
+        where: {
+          id: persona.id,
+        },
+        data: { personaJson: changedPersona },
+      });
+
+      return updated_persona;
+    }),
+
+  createPetMoodLogRecord: protectedProcedure.mutation(async ({ ctx }) => {
+    const caller = appRouter.createCaller(ctx);
+
+    const persona = await ctx.db.userPetPersona.findFirst({
+      where: {
+        pet: {
+          isActive: true,
+          userId: ctx.session.user.id,
+        },
+      },
+      select: {
+        personaJson: true,
+        petId: true,
+        id: true,
+      },
+    });
+
+    if (!persona)
+      throw new TRPCError({
+        code: "NOT_FOUND",
+        message: "No active pet persona found",
+      });
+
+    const { emoji } = (await caller.llm.getCurrentPersonaEmoji()) as {
+      emoji: UserMood;
+    };
+
+    const { dialogue, mood } = (await caller.llm.getCurrentPersonaState()) as {
+      dialogue: string;
+      mood: string;
+    };
+
+    const created = await ctx.db.petMoodLog.create({
+      data: {
+        petId: persona.petId,
+        happiness: 10,
+        trigger: "UNKNOWN",
+        mood: emoji,
+        dialogue: dialogue,
+        status: mood,
+      },
+    });
+
+    return created;
+  }),
+  upsertPersonChangeWithMeditation: protectedProcedure
+    .input(
+      z.object({
+        meditation_duration: z.number(),
+        time_started: z.string(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { meditation_duration, time_started } = input;
+      const caller = appRouter.createCaller(ctx);
+
+      const persona = await ctx.db.userPetPersona.findFirst({
+        where: {
+          pet: {
+            isActive: true,
+            userId: ctx.session.user.id,
+          },
+        },
+        select: {
+          personaJson: true,
+          id: true,
+        },
+      });
+
+      if (!persona)
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "No active pet persona found",
+        });
+
+      const userInput = {
+        instructions:
+          "Based on the meditation data provided below, modify [Persona.json].",
+        meditation_duration,
+        time_started,
+      };
+
+      const { personaJson } = persona;
+
+      // Get Changed Persona
+      const personaChangePrompt = getPersonaChangePrompt(
+        userInput,
+        personaJson as object,
+      );
+      const changedPersonaResponse = await ai.models.generateContent({
+        model,
+        config: {
+          ...config,
+          responseMimeType: "application/json",
+        },
+        contents: [{ role: "user", parts: [{ text: personaChangePrompt }] }],
+      });
+      const changed_persona = tryParseToObject(changedPersonaResponse);
+
+      if (!changed_persona || typeof changed_persona !== "object") {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to parse changed persona response",
+        });
+      }
+
+      // Upsert UserPetPersona with changed persona
+      await ctx.db.userPetPersona.update({
+        where: {
+          id: persona.id,
+        },
+        data: { personaJson: changed_persona },
+      });
+
+      // Get Post Meditation Message
+      const meditation_response = (await caller.llm.getPostMeditationMessage({
+        meditation_duration,
+        time_started,
+      })) as { meditation_response: string };
+
+      return meditation_response;
+    }),
+
   getCurrentPersonaState: protectedProcedure.query(async ({ ctx }) => {
     const caller = appRouter.createCaller(ctx);
     const persona = await caller.llm.getActivePetPersonaJson();
@@ -116,7 +300,7 @@ export const LLMRouter = createTRPCRouter({
 
       return response_object as { post_meal_mood: string };
     }),
-  getMeditationMessage: protectedProcedure
+  getPostMeditationMessage: protectedProcedure
     .input(
       z.object({
         meditation_duration: z.number(),
@@ -243,6 +427,24 @@ export const LLMRouter = createTRPCRouter({
 
     // const persona_state = await caller.llm.getCurrentPersonaState();
     // console.log("Persona State:", persona_state);
+
+    // const meditation_text_with_persona =
+    //   await caller.llm.upsertPersonChangeWithMeditation({
+    //     meditation_duration: 300,
+    //     time_started: "10:00 AM",
+    //   });
+    // console.log(
+    //   "Meditation Text with Persona Change:",
+    //   meditation_text_with_persona,
+    // );
+
+    // const created_log = await caller.llm.createPetMoodLogRecord();
+    // console.log("Created Log:", created_log);
+
+    // const updated_persona = await caller.llm.triggerPersonaUpdateWithInput({
+    //   message: "I am feeling extra energized today!",
+    // });
+    // console.log("Updated Persona:", updated_persona);
     // END TEST DB QUERY ==================================================
 
     const persona = await ctx.db.userPetPersona.findFirst({

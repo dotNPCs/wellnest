@@ -1,14 +1,15 @@
 export const getPersonaChangePrompt = (
-  userInput: string,
+  userInput: object | string,
   persona: object,
 ) => {
   return `
     [Persona.json]
     ${JSON.stringify(persona)}
 
-    Conduct Sentiment Analysis from this input 
-    
-    <User Input>: ${userInput}
+    Conduct Sentiment Analysis from [User Input] and based on any other additional details provided.
+
+    [User Input]: 
+    ${typeof userInput === "object" ? JSON.stringify(userInput) : userInput}
 
     and modify the above [Persona.json] in all fields. Except DO NOT modify the "role" field.
 
