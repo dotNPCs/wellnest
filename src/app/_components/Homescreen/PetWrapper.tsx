@@ -14,6 +14,7 @@ import PixelBackground from "../Pixel/PixelBackground";
 import PetSprite from "../Pixel/PetSprite";
 import SpriteDebugger from "../Pixel/PetDebugger";
 import { Dropdown } from "./DropdownMenu";
+import Image from "next/image";
 
 const PetWrapper = () => {
   const { data: session, status } = useSession();
@@ -72,16 +73,28 @@ const PetWrapper = () => {
     if (pet?.moodLogs?.[0]?.dialogue) {
       setCurrentDialogue(pet.moodLogs[0].dialogue);
     }
+    if (!pet?.moodLogs?.[0]?.status) {
+      setShowMoodStatus(true);
+    }
   }, [pet?.moodLogs]);
 
   // Function to get mood emoji based on status
   const getMoodEmoji = (status: string) => {
-    if (status.toLowerCase().includes("happy")) return "😊";
-    if (status.toLowerCase().includes("sad")) return "😢";
-    if (status.toLowerCase().includes("angry")) return "😠";
-    if (status.toLowerCase().includes("excited")) return "🤩";
-    if (status.toLowerCase().includes("tired")) return "😴";
-    return "😐"; // Default neutral emoji
+    if (status.toLowerCase().includes("happy")) return "/emojis/happy.png";
+    if (status.toLowerCase().includes("sad")) return "/emojis/sad.png";
+    if (status.toLowerCase().includes("angry")) return "/emojis/angry.png";
+    if (status.toLowerCase().includes("excited")) return "/emojis/excited.png";
+    if (status.toLowerCase().includes("tired")) return "/emojis/tired.png";
+    if (status.toLowerCase().includes("anxious")) return "/emojis/anxious.png";
+    if (status.toLowerCase().includes("stressed"))
+      return "/emojis/stressed.png";
+    if (status.toLowerCase().includes("calm")) return "/emojis/calm.png";
+    if (status.toLowerCase().includes("energetic"))
+      return "/emojis/energetic.png";
+    if (status.toLowerCase().includes("grateful"))
+      return "/emojis/grateful.png";
+    if (status.toLowerCase().includes("content")) return "/emojis/content.png";
+    return "/emojis/neutral.png";
   };
 
   // Function to calculate days since pet creation
@@ -144,10 +157,15 @@ const PetWrapper = () => {
 
               <button
                 onClick={() => setShowMoodStatus(!showMoodStatus)}
-                className="z-9 flex h-10 w-10 items-center justify-center rounded-full bg-white text-xl shadow-lg transition-transform duration-200 hover:scale-110 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                className="z-9 flex h-10 w-10 items-center justify-center rounded-md bg-white text-xl shadow-lg transition-transform duration-200 hover:scale-110 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 aria-label="Toggle mood status"
               >
-                {getMoodEmoji(pet.moodLogs[0]?.mood || "")}
+                <Image
+                  src={getMoodEmoji(pet.moodLogs[0]?.mood || "")}
+                  alt="Mood Emoji"
+                  width={32}
+                  height={32}
+                />
               </button>
             </div>
           )}

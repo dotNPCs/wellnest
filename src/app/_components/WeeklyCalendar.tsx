@@ -18,6 +18,7 @@ import {
   startOfDay,
 } from "date-fns";
 import DiaryInputDialog from "./Journal/JournalInputModal";
+import Image from "next/image";
 
 interface MealRatings {
   breakfast: number;
@@ -88,17 +89,19 @@ const WeeklyCalendar = () => {
   }, [currentWeekStart]);
 
   // Mood mapping
+  // Function to get mood emoji based on status
+
   const moods = [
-    { emoji: "😊", label: "Happy", value: "HAPPY" },
-    { emoji: "😐", label: "Neutral", value: "NEUTRAL" },
-    { emoji: "🙂", label: "Content", value: "CONTENT" },
-    { emoji: "🤩", label: "Excited", value: "EXCITED" },
-    { emoji: "😩", label: "Stressed", value: "STRESSED" },
-    { emoji: "🙏", label: "Grateful", value: "GRATEFUL" },
-    { emoji: "😌", label: "Calm", value: "CALM" },
-    { emoji: "😰", label: "Anxious", value: "ANXIOUS" },
-    { emoji: "😃", label: "Energetic", value: "ENERGETIC" },
-    { emoji: "😴", label: "Tired", value: "TIRED" },
+    { emoji: "/emojis/happy.png", label: "Happy", value: "HAPPY" },
+    { emoji: "/emojis/neutral.png", label: "Neutral", value: "NEUTRAL" },
+    { emoji: "/emojis/content.png", label: "Content", value: "CONTENT" },
+    { emoji: "/emojis/excited.png", label: "Excited", value: "EXCITED" },
+    { emoji: "/emojis/stressed.png", label: "Stressed", value: "STRESSED" },
+    { emoji: "/emojis/grateful.png", label: "Grateful", value: "GRATEFUL" },
+    { emoji: "/emojis/calm.png", label: "Calm", value: "CALM" },
+    { emoji: "/emojis/anxious.png", label: "Anxious", value: "ANXIOUS" },
+    { emoji: "/emojis/energetic.png", label: "Energetic", value: "ENERGETIC" },
+    { emoji: "/emojis/tired.png", label: "Tired", value: "TIRED" },
   ];
 
   const nextWeek = () => {
@@ -250,9 +253,12 @@ const WeeklyCalendar = () => {
                     >
                       Today&apos;s vibe:
                     </span>
-                    <span className="animate-bounce text-2xl">
-                      {moods[moodIndex]?.emoji}
-                    </span>
+                    <Image
+                      src={moods[moodIndex]?.emoji ?? "/emojis/neutral.png"}
+                      alt={moods[moodIndex]?.label || "Mood Emoji"}
+                      width={20}
+                      height={20}
+                    />
                     <span
                       className="text-sm font-bold"
                       style={{ color: "#C17349" }}
@@ -342,7 +348,15 @@ const WeeklyCalendar = () => {
                                 border: "2px solid #DA8359",
                               }}
                             >
-                              {moods[getMoodIndexFromValue(dayMood)]?.emoji}
+                              <Image
+                                src={
+                                  moods[getMoodIndexFromValue(dayMood)]
+                                    ?.emoji ?? "/emojis/neutral.png"
+                                }
+                                alt="Mood Emoji"
+                                width={24}
+                                height={24}
+                              />
                             </div>
                           ) : (
                             <button
@@ -366,9 +380,19 @@ const WeeklyCalendar = () => {
                                 border: "2px solid #A5B68D50",
                               }}
                             >
-                              {dayMood
-                                ? moods[getMoodIndexFromValue(dayMood)]?.emoji
-                                : "-"}
+                              {dayMood ? (
+                                <Image
+                                  src={
+                                    moods[getMoodIndexFromValue(dayMood)]
+                                      ?.emoji ?? "/emojis/neutral.png"
+                                  }
+                                  alt="Mood Emoji"
+                                  width={24}
+                                  height={24}
+                                />
+                              ) : (
+                                "-"
+                              )}
                             </div>
                           ) : (
                             <div className="h-10 w-10 rounded-full border-2 border-gray-200 bg-gray-50"></div>
@@ -480,9 +504,15 @@ const WeeklyCalendar = () => {
                     >
                       {formatTime(new Date(entry.createdAt))}
                       {entry.mood && (
-                        <span className="ml-2 text-lg">
-                          {moods[getMoodIndexFromValue(entry.mood)]?.emoji}
-                        </span>
+                        <Image
+                          src={
+                            moods[getMoodIndexFromValue(entry.mood)]?.emoji ??
+                            "/emojis/neutral.png"
+                          }
+                          alt="Mood Emoji"
+                          width={24}
+                          height={24}
+                        />
                       )}
                     </div>
                     <div
