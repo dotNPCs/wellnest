@@ -41,6 +41,9 @@ const MeditationSprite = () => {
             translate: "50px 0",
             transform: "scale(5)",
             transformOrigin: "bottom",
+            willChange: "transform",
+            backfaceVisibility: "hidden",
+            perspective: "1000px",
           }}
         />
       </div>
