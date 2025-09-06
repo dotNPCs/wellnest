@@ -4,8 +4,10 @@ export const getCurrentPersonaStatePrompt = (persona: object) => {
     ${JSON.stringify(persona)}
 
     Use the above persona, generate for me the following and adhere to the format.
-    Make the mood more sensitive/concerned for the user when time minutes is even, and make the dialouge a suggestion/reminder when pet is sensitive/concerned.
-    The dialouge should be third person e.g Your pet thinks you should do something.
+    Make the mood more sensitive/concerned for the user when time minutes is even, and make the mood a suggestion/reminder when pet is sensitive/concerned.
+    The mood should be third person e.g Your pet thinks you should do something.
+    The dialogue should be in second person e.g I'm concerned you aren't sleeping well...
+    Ensure the mood and dialogue are consistent with the persona traits, current mood, and recent activities of the pet.
 
     {
         "mood": "<Generate Response Here, Max 80 chars>",
