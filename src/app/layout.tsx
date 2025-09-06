@@ -1,3 +1,4 @@
+//layout.tsx
 import "@/styles/globals.css";
 
 import { type Metadata } from "next";
@@ -104,7 +105,7 @@ export default async function RootLayout({
           content="black-translucent"
         />
       </head>
-      <body className="w-full overflow-x-hidden">
+      <body className="w-full overflow-hidden overscroll-none">
         <div className="mx-auto flex min-h-screen w-full max-w-[768px] flex-col bg-white md:border-2 md:border-black">
           <TRPCReactProvider>
             <SessionProvider session={session}>

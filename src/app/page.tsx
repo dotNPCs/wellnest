@@ -1,5 +1,4 @@
-import Link from "next/link";
-
+//page.tsx
 import { auth } from "@/server/auth";
 import { HydrateClient } from "@/trpc/server";
 import PetWrapper from "./_components/Homescreen/PetWrapper";
@@ -15,7 +14,7 @@ export default async function Home() {
 
   return (
     <HydrateClient>
-      <main className="min-h-screen overflow-hidden bg-black">
+      <main className="min-h-screen touch-none overflow-hidden bg-black">
         <PetWrapper />
 
         <CustomDrawer

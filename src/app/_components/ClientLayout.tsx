@@ -16,36 +16,57 @@ interface ClientLayoutProps {
 
 export default function ClientLayout({ children }: ClientLayoutProps) {
   const { data: session, status } = useSession();
-
   const [loading, setLoading] = useState(true);
+  const [isUpdatingPetPersona, setIsUpdatingPetPersona] = useState(false);
+  const [hasRun, setHasRun] = useState(false); // ✅ track if mutation has already run
   const router = useRouter();
 
-  // Simple pet fetch - runs once on mount
   const {
     data: pet,
     isLoading: isPetLoading,
     refetch,
   } = api.pet.getCurrentUserPet.useQuery(undefined, {
-    enabled: status === "authenticated" && !!session?.user, // Only run if authenticated
+    enabled: status === "authenticated" && !!session?.user,
   });
 
+  const createPetMoodLogRecordMutation =
+    api.llm.createPetMoodLogRecord.useMutation({
+      onMutate: () => setIsUpdatingPetPersona(true),
+      onSettled: () => setIsUpdatingPetPersona(false),
+      onError: (error) => {
+        console.error("Error updating pet mood log:", error);
+      },
+      onSuccess: async () => {
+        await refetch(); // ✅ refresh pet after update
+      },
+    });
+
+  // Redirect if unauthenticated
   useEffect(() => {
     if (status === "unauthenticated" || !session?.user) {
       router.push("/api/auth/signin");
     }
   }, [status, session, router]);
 
+  // Run mutation once if pet exists
+  useEffect(() => {
+    if (!isPetLoading && pet && !hasRun) {
+      setHasRun(true); // ✅ mark as run to prevent loops
+      createPetMoodLogRecordMutation.mutate();
+    }
+  }, [isPetLoading, pet, hasRun, createPetMoodLogRecordMutation]);
+
   useEffect(() => {
     if (!isPetLoading) {
       setLoading(false);
     }
-  }, [isPetLoading, pet]);
+  }, [isPetLoading]);
 
   return (
     <PetContext.Provider
       value={{
         pet: pet ?? null,
-        isLoading: isPetLoading,
+        isLoading: isPetLoading || isUpdatingPetPersona,
         refetch,
       }}
     >

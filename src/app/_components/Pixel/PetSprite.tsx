@@ -109,7 +109,7 @@ const PetSprite = forwardRef<PetSpriteRef, { pet: UserPet; mood?: string }>(
         ref={petRef}
         className="absolute -bottom-5 left-1/2 z-10 -translate-x-1/2 transform"
         onClick={() => {
-          idleManagerRef.current?.isInNightMode() &&
+          !idleManagerRef.current?.isInNightMode() &&
             (pet.familiarity > 25
               ? triggerAnimation("meowSitFront")
               : triggerAnimation("hissFront"));

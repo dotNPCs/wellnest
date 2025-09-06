@@ -7,7 +7,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { type JournalEntry } from "@prisma/client";
 import { api } from "@/trpc/react";
-import { UserMood, MealType } from "@prisma/client"; // Adjust import path
+import { UserMood, MealType } from "@prisma/client";
 import { useSwipeable } from "react-swipeable";
 import {
   format,
@@ -17,6 +17,7 @@ import {
   subWeeks,
   startOfDay,
 } from "date-fns";
+import DiaryInputDialog from "./Journal/JournalInputModal";
 
 interface MealRatings {
   breakfast: number;
@@ -35,11 +36,6 @@ const WeeklyCalendar = () => {
 
   // Modal state
   const [showDiaryInput, setShowDiaryInput] = useState(false);
-  const [currentDiaryText, setCurrentDiaryText] = useState("");
-  const [selectedMoodIndex, setSelectedMoodIndex] = useState<number | null>(
-    null,
-  );
-
   const [isCreatingJournal, setIsCreatingJournal] = useState(false);
 
   // Calculate week end for queries
@@ -91,7 +87,7 @@ const WeeklyCalendar = () => {
     setDisplayedWeek(currentWeekStart);
   }, [currentWeekStart]);
 
-  // Mood mapping - you'll need to map your UserMood enum to these
+  // Mood mapping
   const moods = [
     { emoji: "😊", label: "Happy", value: "HAPPY" },
     { emoji: "😐", label: "Neutral", value: "NEUTRAL" },
@@ -159,34 +155,17 @@ const WeeklyCalendar = () => {
 
   const openDiaryInput = (date: Date) => {
     setSelectedDate(date);
-    setCurrentDiaryText("");
-    setSelectedMoodIndex(null);
     setShowDiaryInput(true);
   };
 
-  const addDiaryEntry = async () => {
-    if (!selectedDate || !isToday(selectedDate) || !currentDiaryText.trim())
-      return;
+  const handleDiarySave = async (content: string, mood?: UserMood) => {
+    if (!selectedDate || !isToday(selectedDate)) return;
 
-    const moodValue =
-      selectedMoodIndex !== null
-        ? (moods[selectedMoodIndex]?.value as UserMood)
-        : undefined;
-
-    try {
-      await createJournal.mutateAsync({
-        content: currentDiaryText.trim(),
-        mood: moodValue,
-        createdAt: new Date(),
-      });
-
-      setCurrentDiaryText("");
-      setShowDiaryInput(false);
-      setSelectedDate(new Date());
-      setSelectedMoodIndex(null);
-    } catch (error) {
-      console.error("Failed to create journal entry:", error);
-    }
+    await createJournal.mutateAsync({
+      content,
+      mood,
+      createdAt: new Date(),
+    });
   };
 
   const getEntriesForDay = (date: Date): JournalEntry[] => {
@@ -206,14 +185,6 @@ const WeeklyCalendar = () => {
       dinner: dayCheckins.dinner?.rating ?? 0,
     };
   };
-
-  useEffect(() => {
-    console.log("isCreatingJournal changed:", isCreatingJournal);
-  }, [isCreatingJournal]);
-
-  useEffect(() => {
-    console.log("selectedDate changed:", selectedDate);
-  }, [selectedDate]);
 
   const getMoodIndexFromValue = (moodValue: UserMood): number => {
     const index = moods.findIndex((mood) => mood.value === moodValue);
@@ -422,141 +393,16 @@ const WeeklyCalendar = () => {
           </motion.div>
         </AnimatePresence>
 
-        {/* Diary Input Modal */}
-        {showDiaryInput && selectedDate && (
-          <div className="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black p-4">
-            <div
-              className="w-full max-w-sm rounded-2xl p-4 shadow-xl"
-              style={{
-                backgroundColor: "#FCFAEE",
-                border: "2px solid #A5B68D50",
-              }}
-            >
-              <h3
-                className="mb-1 text-base font-bold"
-                style={{ color: "#5A6B4D" }}
-              >
-                Add Entry -{" "}
-                {selectedDate.toLocaleDateString("en", {
-                  weekday: "short",
-                  month: "short",
-                  day: "numeric",
-                })}
-              </h3>
-              <p
-                className="mb-3 text-xs"
-                style={{ color: "#5A6B4D", opacity: 0.7 }}
-              >
-                {formatTime(new Date())}
-              </p>
-
-              {/* Mood Selection */}
-              <div className="mb-3">
-                <p
-                  className="mb-2 text-sm font-medium"
-                  style={{ color: "#5A6B4D" }}
-                >
-                  How are you feeling?
-                </p>
-                <div className="grid grid-cols-5 gap-2">
-                  {moods.map((mood, index) => (
-                    <button
-                      key={index}
-                      onClick={() => setSelectedMoodIndex(index)}
-                      className={`rounded-lg p-2 transition-all ${
-                        selectedMoodIndex === index
-                          ? "scale-110 shadow-md"
-                          : "hover:opacity-80"
-                      }`}
-                      style={
-                        selectedMoodIndex === index
-                          ? {
-                              backgroundColor: "#F4DCC9",
-                              boxShadow: "0 0 0 2px #DA8359",
-                            }
-                          : { backgroundColor: "white" }
-                      }
-                    >
-                      <div className="text-2xl">{mood.emoji}</div>
-                      <div className="mt-1 text-[8px] font-medium">
-                        {mood.label}
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Show existing entries for this day */}
-              {selectedDate && getEntriesForDay(selectedDate).length > 0 && (
-                <div
-                  className="mb-3 max-h-32 overflow-y-auto pt-2"
-                  style={{ borderTop: "2px solid #A5B68D50" }}
-                >
-                  <p
-                    className="mb-1 text-xs font-medium"
-                    style={{ color: "#5A6B4D" }}
-                  >
-                    Today&apos;s entries:
-                  </p>
-                  {getEntriesForDay(selectedDate).map((entry) => (
-                    <div
-                      key={entry.id}
-                      className="mb-1 rounded bg-white p-2 text-xs"
-                    >
-                      <span className="font-bold" style={{ color: "#5A6B4D" }}>
-                        {formatTime(entry.createdAt)}
-                      </span>
-                      <span
-                        className="ml-2"
-                        style={{ color: "#5A6B4D", opacity: 0.8 }}
-                      >
-                        {entry.content.substring(0, 50)}
-                        {entry.content.length > 50 ? "..." : ""}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              <textarea
-                value={currentDiaryText}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  if (value.length <= 500) {
-                    setCurrentDiaryText(value);
-                  }
-                }}
-                placeholder="How was your day? ✨"
-                className="h-24 w-full resize-none rounded-lg bg-white p-2 text-sm focus:outline-none"
-                style={{ border: "2px solid #A5B68D50" }}
-                autoFocus
-              />
-
-              <div className="mt-3 flex gap-2">
-                <button
-                  onClick={addDiaryEntry}
-                  disabled={isCreatingJournal}
-                  className="flex-1 rounded-lg px-3 py-2 text-sm font-bold text-white shadow-md transition-all hover:opacity-90 disabled:opacity-50"
-                  style={{ backgroundColor: "#A5B68D" }}
-                >
-                  {isCreatingJournal ? "Saving..." : "Save"}
-                </button>
-                <button
-                  onClick={() => {
-                    setShowDiaryInput(false);
-                    setCurrentDiaryText("");
-                    setSelectedDate(new Date());
-                    setSelectedMoodIndex(null);
-                  }}
-                  className="flex-1 rounded-lg px-3 py-2 text-sm font-bold text-white transition-all hover:opacity-90"
-                  style={{ backgroundColor: "#DA8359" }}
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
+        {/* Diary Input Dialog */}
+        <DiaryInputDialog
+          open={showDiaryInput}
+          onOpenChange={setShowDiaryInput}
+          selectedDate={selectedDate}
+          onSave={handleDiarySave}
+          existingEntries={getEntriesForDay(selectedDate)}
+          isLoading={isCreatingJournal}
+          moods={moods}
+        />
 
         {/* Diary Entries Display */}
         {journeyEntries.length > 0 && (
