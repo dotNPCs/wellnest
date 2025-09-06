@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { MEAL_CONFIG } from "@/lib/utils";
 import { MealType } from "@prisma/client";
 import { api } from "@/trpc/react";
+import { usePet } from "@/contexts/PetContext";
 
 interface MealCheckinModalProps {
   isOpen: boolean;
@@ -22,8 +23,10 @@ const MealCheckinModal: React.FC<MealCheckinModalProps> = ({
   const [notes, setNotes] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const { refetch } = usePet();
   const mealConfig = MEAL_CONFIG[mealType];
 
+  const updatePetMoodLog = api.llm.createPetMoodLogRecord.useMutation({});
   const createCheckin = api.checkin.create.useMutation({
     onSuccess: () => {
       setIsSubmitting(false);
@@ -32,6 +35,8 @@ const MealCheckinModal: React.FC<MealCheckinModalProps> = ({
       // Reset form
       setRating(3);
       setNotes("");
+      updatePetMoodLog.mutate();
+      refetch();
     },
     onError: (error: any) => {
       setIsSubmitting(false);

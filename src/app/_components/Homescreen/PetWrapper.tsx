@@ -104,7 +104,7 @@ const PetWrapper = () => {
   };
 
   return (
-    <div className="relative flex h-[60vh] w-full max-w-[768px] flex-col items-center justify-center overflow-hidden text-center text-white">
+    <div className="relative flex h-[60dvh] w-full max-w-[768px] touch-none flex-col items-center justify-center overflow-hidden text-center text-white">
       {/* Pixel Background with Animations */}
       <div className="fixed top-4 left-4 z-10">
         <Dropdown />

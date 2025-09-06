@@ -24,16 +24,22 @@ const DrawerContent = () => {
         >
           activities
         </TabsTrigger>
+        <TabsTrigger
+          value="farm"
+          className="flex-1 text-slate-400 transition-all data-[state=active]:text-[1.01rem] data-[state=active]:text-black data-[state=active]:shadow-none"
+        >
+          farm
+        </TabsTrigger>
       </TabsList>
 
       <TabsContent value="diary">
-        <div className="scrollbar-hidden max-h-[calc(100vh-6rem)] overflow-y-auto">
+        <div className="">
           <WeeklyCalendar />
         </div>
       </TabsContent>
 
       <TabsContent value="activities">
-        <div className="scrollbar-hidden max-h-[calc(100vh-6rem)] overflow-y-auto">
+        <div className="">
           <ActivitiesList
             onNavigate={function (screen: "home" | "meditation"): void {
               throw new Error("Function not implemented.");
@@ -41,7 +47,9 @@ const DrawerContent = () => {
           />
         </div>
       </TabsContent>
-
+      <TabsContent value="farm">
+        <div className="text-center">Coming soon!</div>
+      </TabsContent>
     </Tabs>
   );
 };

@@ -1,5 +1,5 @@
 "use client";
-
+//MainDrawer.tsx
 import { api } from "@/trpc/react";
 import React, { useState, useRef, useEffect } from "react";
 import MealCheckinHandler from "./Homescreen/MealCheckinHandler";
@@ -24,16 +24,15 @@ export default function CustomDrawer({
   const drawerRef = useRef<HTMLDivElement>(null);
 
   const minHeight = 42; // 50% minimum
-  const [maxHeight, setMaxHeight] = useState<number>(100);
+  const [maxHeight, setMaxHeight] = useState<number>(85);
 
   const todayStatus = api.checkin.getTodayStatus.useQuery();
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      setMaxHeight(Math.min((900 / window.innerHeight) * 100, 100));
+      setMaxHeight(Math.min((850 / window.innerHeight) * 100, 85));
     }
   }, []);
-
   const handleMouseDown = (e: React.MouseEvent) => {
     if (!allowDragUp) return;
 
@@ -125,12 +124,14 @@ export default function CustomDrawer({
       ref={drawerRef}
       className={`fixed right-0 bottom-0 left-0 z-50 rounded-t-xl border-t border-gray-200 bg-white shadow-lg transition-all duration-200 dark:border-gray-700 dark:bg-gray-900 ${className}`}
       style={{
-        height: `${height}vh`,
-        minHeight: "40vh",
-        maxHeight: allowDragUp ? "900px" : "50vh",
-        overflowY: height >= maxHeight - 1 ? "auto" : "hidden", 
+        height: `${height}dvh`,
+        minHeight: "42dvh",
+        maxHeight: "85dvh",
+        overflowY: height >= maxHeight - 1 ? "auto" : "hidden",
       }}
-    >  {/* Drag handle */}
+    >
+      {" "}
+      {/* Drag handle */}
       <div
         className={`flex w-full justify-center py-2 ${allowDragUp ? "cursor-grab active:cursor-grabbing" : ""}`}
         onMouseDown={handleMouseDown}
@@ -140,10 +141,9 @@ export default function CustomDrawer({
           className={`h-1 w-12 rounded-full bg-gray-300 dark:bg-gray-600 ${allowDragUp ? "hover:bg-gray-400 dark:hover:bg-gray-500" : ""} transition-colors`}
         />
       </div>
-
       {/* Content */}
       <div
-        className={`p-4 ${height >= maxHeight - 1 ? "" : "overflow-auto flex-1"}`}
+        className={`p-4 ${height >= maxHeight - 1 ? "" : "flex-1 overflow-auto"}`}
       >
         <MealCheckinHandler />
         {children}

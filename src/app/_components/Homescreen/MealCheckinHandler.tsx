@@ -22,9 +22,9 @@ interface MealCheckinHandlerProps {
 
 // Define meal time windows (24-hour format)
 const MEAL_WINDOWS = {
-  breakfast: { start: 6, end: 10 }, // 6:00 AM - 10:00 AM
-  lunch: { start: 11.5, end: 14 }, // 11:30 AM - 2:00 PM
-  dinner: { start: 17.5, end: 20.5 }, // 5:30 PM - 8:30 PM
+  breakfast: { start: 6, end: 11.5 }, // 6:00 AM - 10:00 AM
+  lunch: { start: 11.5, end: 15 }, // 11:30 AM - 2:00 PM
+  dinner: { start: 17.5, end: 21.5 }, // 5:30 PM - 8:30 PM
 };
 
 // Helper function to get current time as decimal hours (e.g., 13:30 = 13.5)
@@ -34,13 +34,15 @@ const getCurrentTimeHours = (): number => {
 };
 
 // Helper function to determine what should be shown based on time and completion status
+// Helper function to determine what should be shown based on time and completion status
+// Helper function to determine what should be shown based on time and completion status
 const getCurrentActiveMeal = (
   todayStatus: any,
 ): {
   mealType: MealType | null;
   isCompleted: boolean;
   isActionable: boolean;
-  displayMode: "meal" | "sleep" | "completed_all";
+  displayMode: "meal" | "sleep" | "completed_all" | "none";
 } => {
   const currentTime = getCurrentTimeHours();
   const completedCount = todayStatus.completedCount ?? 0;
@@ -65,10 +67,11 @@ const getCurrentActiveMeal = (
     };
   }
 
-  // Determine which meal window we're currently in or should show
+  // Determine which meal to show based on current time
   let targetMeal: MealType | null = null;
   let isInActiveWindow = false;
 
+  // First, check if we're currently in an active meal window
   if (
     currentTime >= MEAL_WINDOWS.breakfast.start &&
     currentTime <= MEAL_WINDOWS.breakfast.end
@@ -88,35 +91,13 @@ const getCurrentActiveMeal = (
     targetMeal = MealType.DINNER;
     isInActiveWindow = true;
   } else {
-    // We're between meal windows - determine which meal to show
-    if (currentTime < MEAL_WINDOWS.breakfast.start) {
-      // Before breakfast time (6:00 AM) - this should be handled by sleep case above
-      targetMeal = MealType.BREAKFAST;
-    } else if (
-      currentTime > MEAL_WINDOWS.breakfast.end &&
-      currentTime < MEAL_WINDOWS.lunch.start
-    ) {
-      // Between breakfast and lunch
-      targetMeal = !todayStatus.breakfast ? MealType.BREAKFAST : MealType.LUNCH;
-    } else if (
-      currentTime > MEAL_WINDOWS.lunch.end &&
-      currentTime < MEAL_WINDOWS.dinner.start
-    ) {
-      // Between lunch and dinner
-      if (!todayStatus.lunch) {
-        targetMeal = MealType.LUNCH;
-      } else {
-        targetMeal = MealType.DINNER;
-      }
-    } else if (currentTime > MEAL_WINDOWS.dinner.end) {
-      // After dinner time
-      if (!todayStatus.dinner) {
-        targetMeal = MealType.DINNER;
-      } else {
-        // All meals completed or it's too late
-        targetMeal = MealType.DINNER;
-      }
-    }
+    // We're between meal windows - show the next uncompleted meal
+    return {
+      mealType: null,
+      isCompleted: false,
+      isActionable: false,
+      displayMode: "none",
+    };
   }
 
   if (!targetMeal) {
@@ -131,10 +112,13 @@ const getCurrentActiveMeal = (
   const mealKey = targetMeal.toLowerCase() as keyof typeof todayStatus;
   const isCompleted = todayStatus[mealKey] as boolean;
 
+  // Determine if the meal is actionable
+  // A meal is actionable if:
+  // 1. It's not completed, AND
+  // 2. We're currently in its window OR its window has passed (for late logging)
+  const mealWindow = MEAL_WINDOWS[mealKey as keyof typeof MEAL_WINDOWS];
   const isActionable =
-    !isCompleted &&
-    (isInActiveWindow ||
-      currentTime > MEAL_WINDOWS[mealKey as keyof typeof MEAL_WINDOWS].end);
+    !isCompleted && (isInActiveWindow || currentTime > mealWindow.end);
 
   return {
     mealType: targetMeal,
@@ -163,8 +147,8 @@ const getMealDisplayInfo = (
         ? "Great start to your day!"
         : isActionable
           ? "Start your day right"
-          : "Time window: 6:00 AM - 10:00 AM",
-      time: "6:00 AM - 10:00 AM",
+          : "Time window: 6:00 AM - 11:30 AM",
+      time: "6:00 AM - 11:30 AM",
       buttonBg:
         "bg-gradient-to-r from-[#d7a43f] to-[#e5b555] hover:from-[#c4932e] hover:to-[#d7a43f] shadow-lg shadow-[#d7a43f]/20",
       completedBg: "bg-gradient-to-br from-[#6a5a43] to-[#7a6a53]",
@@ -183,8 +167,8 @@ const getMealDisplayInfo = (
         ? "Keep the momentum going!"
         : isActionable
           ? "Fuel your afternoon"
-          : "Time window: 11:30 AM - 2:00 PM",
-      time: "11:30 AM - 2:00 PM",
+          : "Time window: 11:30 AM - 3:00 PM",
+      time: "11:30 AM - 3:00 PM",
       buttonBg:
         "bg-gradient-to-r from-[#6a5a43] to-[#7a6a53] hover:from-[#5a4a33] hover:to-[#6a5a43] shadow-lg shadow-[#6a5a43]/20",
       completedBg: "bg-gradient-to-br from-[#6a5a43] to-[#7a6a53]",
@@ -203,8 +187,8 @@ const getMealDisplayInfo = (
         ? "Perfect end to your day!"
         : isActionable
           ? "Wind down with a good meal"
-          : "Time window: 5:30 PM - 8:30 PM",
-      time: "5:30 PM - 8:30 PM",
+          : "Time window: 5:30 PM - 9:30 PM",
+      time: "5:30 PM - 9:30 PM",
       buttonBg:
         "bg-gradient-to-r from-[#402e1a] to-[#503e2a] hover:from-[#301e0a] hover:to-[#402e1a] shadow-lg shadow-[#402e1a]/20",
       completedBg: "bg-gradient-to-br from-[#6a5a43] to-[#7a6a53]",
@@ -280,7 +264,7 @@ const MealCheckinHandler: React.FC<MealCheckinHandlerProps> = ({
   const [isMealCompleted, setIsMealCompleted] = useState(false);
   const [isActionable, setIsActionable] = useState(false);
   const [displayMode, setDisplayMode] = useState<
-    "meal" | "sleep" | "completed_all"
+    "meal" | "sleep" | "completed_all" | "none"
   >("meal");
 
   // Query to check today's status
@@ -408,7 +392,7 @@ const MealCheckinHandler: React.FC<MealCheckinHandlerProps> = ({
   };
 
   // Don't render anything if no data
-  if (!todayStatus) {
+  if (!todayStatus || displayMode === "none") {
     return null;
   }
 

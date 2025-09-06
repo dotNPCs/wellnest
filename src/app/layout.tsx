@@ -1,16 +1,15 @@
-import "../styles/globals.css";
+//layout.tsx
+import "@/styles/globals.css";
 
 import { type Metadata } from "next";
 import { Geist, Jersey_20 } from "next/font/google";
 import localFont from "next/font/local";
 
 import { TRPCReactProvider } from "@/trpc/react";
-import { Suspense } from "react";
-import SplashScreen from "./_components/SplashScreen";
+
 import ClientLayout from "./_components/ClientLayout";
 import { SessionProvider } from "next-auth/react";
 import { auth } from "@/server/auth";
-import { redirect } from "next/navigation";
 
 const geist = Geist({
   subsets: ["latin"],
@@ -106,7 +105,7 @@ export default async function RootLayout({
           content="black-translucent"
         />
       </head>
-      <body className="w-full overflow-x-hidden">
+      <body className="w-full overflow-hidden overscroll-none">
         <div className="mx-auto flex min-h-screen w-full max-w-[768px] flex-col bg-white md:border-2 md:border-black">
           <TRPCReactProvider>
             <SessionProvider session={session}>
