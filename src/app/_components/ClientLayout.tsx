@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-misused-promises */
+
 // ClientLayout.tsx
 "use client";
 
@@ -31,7 +33,7 @@ export default function ClientLayout({ children }: ClientLayoutProps) {
     if (status === "unauthenticated" || !session?.user) {
       router.push("/api/auth/signin");
     }
-  }, []);
+  }, [status, session, router]);
 
   useEffect(() => {
     if (!isPetLoading) {
@@ -42,7 +44,7 @@ export default function ClientLayout({ children }: ClientLayoutProps) {
   return (
     <PetContext.Provider
       value={{
-        pet: pet || null,
+        pet: pet ?? null,
         isLoading: isPetLoading,
         refetch,
       }}

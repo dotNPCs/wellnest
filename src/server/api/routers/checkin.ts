@@ -129,15 +129,15 @@ export const checkinRouter = createTRPCRouter({
       const status = {
         breakfast: {
           completed: checkinMap.has(MealType.BREAKFAST),
-          data: checkinMap.get(MealType.BREAKFAST) || null,
+          data: checkinMap.get(MealType.BREAKFAST) ?? null,
         },
         lunch: {
           completed: checkinMap.has(MealType.LUNCH),
-          data: checkinMap.get(MealType.LUNCH) || null,
+          data: checkinMap.get(MealType.LUNCH) ?? null,
         },
         dinner: {
           completed: checkinMap.has(MealType.DINNER),
-          data: checkinMap.get(MealType.DINNER) || null,
+          data: checkinMap.get(MealType.DINNER) ?? null,
         },
       };
 
@@ -193,9 +193,8 @@ export const checkinRouter = createTRPCRouter({
               ? checkin.date.toISOString().split("T")[0]
               : undefined;
           if (dateKey) {
-            if (!acc[dateKey]) {
-              acc[dateKey] = [];
-            }
+            acc[dateKey] ??= [];
+
             acc[dateKey].push(checkin);
           }
           return acc;
@@ -221,15 +220,15 @@ export const checkinRouter = createTRPCRouter({
         const status = {
           breakfast: {
             completed: checkinMap.has(MealType.BREAKFAST),
-            data: checkinMap.get(MealType.BREAKFAST) || null,
+            data: checkinMap.get(MealType.BREAKFAST) ?? null,
           },
           lunch: {
             completed: checkinMap.has(MealType.LUNCH),
-            data: checkinMap.get(MealType.LUNCH) || null,
+            data: checkinMap.get(MealType.LUNCH) ?? null,
           },
           dinner: {
             completed: checkinMap.has(MealType.DINNER),
-            data: checkinMap.get(MealType.DINNER) || null,
+            data: checkinMap.get(MealType.DINNER) ?? null,
           },
         };
 

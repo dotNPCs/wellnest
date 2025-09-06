@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { type DefaultSession, type NextAuthConfig } from "next-auth";
 import DiscordProvider from "next-auth/providers/discord";
@@ -51,7 +54,6 @@ export const authConfig = {
       user: {
         ...session.user,
         id: user.id,
-        streakCount: (user as any).streakCount ?? 0,
       },
     }),
     async redirect({ url, baseUrl }) {

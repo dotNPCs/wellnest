@@ -22,7 +22,7 @@ export default function CreatePetModal({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>You've got a new visitor!</DialogTitle>
+          <DialogTitle>You&apos;ve got a new visitor!</DialogTitle>
         </DialogHeader>
       </DialogContent>
     </Dialog>

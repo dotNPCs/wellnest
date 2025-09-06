@@ -73,7 +73,7 @@ export const petRouter = createTRPCRouter({
         currentMood: pet.currentMood,
         familiarity: pet.familiarity,
         recentMoodLogs: pet.moodLogs,
-        currentPersona: pet.personas[0] || null,
+        currentPersona: pet.personas[0] ?? null,
       };
     }),
 
@@ -117,7 +117,8 @@ export const petRouter = createTRPCRouter({
             petId: newPet.id,
             mood: "NEUTRAL",
             happiness: 10.0,
-            status: "Hoping to find a loving home!",
+            dialogue: "Hoping to find a loving home!",
+            status: "Your new pet is excited to meet you!",
             trigger: "ADOPTION",
           },
         });

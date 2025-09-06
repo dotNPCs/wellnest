@@ -34,10 +34,10 @@ export const journalRouter = createTRPCRouter({
 
       journals.forEach((journal) => {
         const dateKey = format(journal.createdAt, "yyyy-MM-dd");
-        if (!journalsByDate[dateKey]) {
-          journalsByDate[dateKey] = [];
-        }
-        journalsByDate[dateKey]!.push(journal);
+
+        journalsByDate[dateKey] ??= [];
+
+        journalsByDate[dateKey].push(journal);
       });
 
       return journalsByDate;
@@ -136,10 +136,8 @@ export const journalRouter = createTRPCRouter({
 
       checkins.forEach((checkin) => {
         const dateKey = format(checkin.date, "yyyy-MM-dd");
-        if (!checkinsByDate[dateKey]) {
-          checkinsByDate[dateKey] = {};
-        }
-        checkinsByDate[dateKey]![checkin.mealType.toLowerCase()] = checkin;
+        checkinsByDate[dateKey] ??= {};
+        checkinsByDate[dateKey][checkin.mealType.toLowerCase()] = checkin;
       });
 
       return checkinsByDate;
