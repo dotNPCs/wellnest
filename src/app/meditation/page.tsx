@@ -118,9 +118,9 @@ export default function MeditationPage() {
         transition={{ duration: 1.2, ease: "easeInOut" }}
       >
         {!isRunning ? (
-          <div className="w-full max-w-md space-y-6 text-center">
+          <div className="w-full max-w-md space-y-2 text-center">
             <motion.h1
-              className="text-3xl font-bold"
+              className="text-3xl font-pixel"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 1, ease: "easeInOut", delay: 0.2 }}
@@ -129,7 +129,7 @@ export default function MeditationPage() {
             </motion.h1>
 
             <motion.p
-              className="opacity-90"
+              className="opacity-90 mb-9"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 1, ease: "easeInOut", delay: 0.4 }}
@@ -247,7 +247,7 @@ export default function MeditationPage() {
                     transition={{
                       duration: 1.5,
                       delay: i * 0.1,
-                      repeat: Infinity,
+                      repeat: Math.floor(3 / 1.5) - 1,
                     }}
                     style={{ left: "50%", top: "50%" }}
                   />
@@ -255,7 +255,7 @@ export default function MeditationPage() {
               </motion.div>
 
               <h2
-                className="mb-1 text-lg font-bold"
+                className="mb-1 text-lg font-pixel"
                 style={{ color: "#5A6B4D" }}
               >
                 Meditation Complete
