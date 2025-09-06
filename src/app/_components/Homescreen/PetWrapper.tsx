@@ -29,7 +29,6 @@ const PetWrapper = () => {
   // Auto-create pet mutation
   const createPetMutation = api.pet.createNewPet.useMutation({
     onSuccess: () => {
-      console.log("Pet created successfully!");
       refetch(); // Refetch to get the new pet
       setShowNewPetModal(true);
     },
@@ -56,17 +55,13 @@ const PetWrapper = () => {
       !createPetMutation.isPending &&
       status === "authenticated"
     ) {
-      console.log("No pet found, auto-creating...");
       hasTriedCreateRef.current = true; // Mark as attempted
       createPetMutation.mutate();
       userCheckInToAppMutation.mutate();
     }
   }, [isLoading, pet, createPetMutation]);
 
-  useEffect(() => {
-    console.log("Pet data updated:", pet ? "Pet found" : "No pet found");
-    console.log("Pet data:", pet);
-  }, [pet]);
+  useEffect(() => {}, [pet]);
 
   // Update current dialogue when pet data changes
   useEffect(() => {
