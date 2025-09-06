@@ -61,8 +61,6 @@ const PetWrapper = () => {
     }
   }, [isLoading, pet, createPetMutation]);
 
-  useEffect(() => {}, [pet]);
-
   // Update current dialogue when pet data changes
   useEffect(() => {
     if (pet?.moodLogs?.[0]?.dialogue) {
