@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { usePet } from "@/contexts/PetContext";
 import { api } from "@/trpc/react";
+import Image from "next/image";
 
 interface MoodOption {
   emoji: string;
@@ -115,7 +116,7 @@ const DiaryInputDialog = ({
               <button
                 key={index}
                 onClick={() => setSelectedMoodIndex(index)}
-                className={`rounded-lg p-2 transition-all ${
+                className={`flex flex-col items-center rounded-lg p-2 transition-all ${
                   selectedMoodIndex === index
                     ? "scale-110 shadow-md"
                     : "hover:opacity-80"
@@ -129,7 +130,12 @@ const DiaryInputDialog = ({
                     : { backgroundColor: "white" }
                 }
               >
-                <div className="text-2xl">{mood.emoji}</div>
+                <Image
+                  src={mood.emoji || "/emojis/neutral.png"}
+                  alt="Mood Emoji"
+                  width={24}
+                  height={24}
+                />
                 <div className="mt-1 text-[8px] font-medium">{mood.label}</div>
               </button>
             ))}
