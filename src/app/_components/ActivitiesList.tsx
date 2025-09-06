@@ -17,7 +17,7 @@ const ActivitiesList: React.FC<ActivitiesListProps> = ({ onNavigate }) => {
             id: "meditation",
             title: "Meditation",
             desc: "Get into the right headspace.",
-            color: "bg-gradient-to-br from-[#6E825D] to-[#A3B58C]", // richer green gradient
+            color: "bg-gradient-to-br from-[#6E825D] to-[#A3B58C]", 
             text: "black",
             icon: "meditationCat",
             path: "/meditation",
@@ -26,46 +26,46 @@ const ActivitiesList: React.FC<ActivitiesListProps> = ({ onNavigate }) => {
             id: "gratitude",
             title: "Gratitude",
             desc: "Recall 3 things you're grateful for.",
-            color: "bg-gradient-to-br from-[#4C4E42] to-[#7B7E6D]", // darker to medium contrast
+            color: "bg-gradient-to-br from-[#4C4E42] to-[#7B7E6D]", 
             text: "black",
             icon: "gratitudeCat",
-            path: "/meditation",
+            path: "",
         },
         {
             id: "mindfulness",
             title: "Mindfulness",
             desc: "Be present and notice the now.",
-            color: "bg-gradient-to-br from-[#6E825D] to-[#B2C49A]", // slightly brighter
+            color: "bg-gradient-to-br from-[#6E825D] to-[#B2C49A]", 
             text: "black",
             icon: "mindfulnessCat",
-            path: "/meditation",
+            path: "",
         },
         {
             id: "sleep",
             title: "Better Sleep",
             desc: "Unwind and prepare for deep rest.",
-            color: "bg-gradient-to-br from-[#1B1C17] to-[#505347]", // richer dark gradient
+            color: "bg-gradient-to-br from-[#1B1C17] to-[#505347]",
             text: "black",
             icon: "bettersleepCat",
-            path: "/meditation",
+            path: "",
         },
         {
             id: "breathing",
             title: "Breathing",
             desc: "Calm your mind with steady breaths.",
-            color: "bg-gradient-to-br from-[#6E825D] to-[#C1D3A0]", // more vibrant green
+            color: "bg-gradient-to-br from-[#6E825D] to-[#C1D3A0]", 
             text: "black",
             icon: "breathingCat",
-            path: "/meditation",
+            path: "",
         },
         {
             id: "affirmation",
             title: "Affirmation",
             desc: "Boost positivity with a daily affirmation.",
-            color: "bg-gradient-to-br from-[#9AB18B] to-[#D0E0C1]", // light, lively green gradient
+            color: "bg-gradient-to-br from-[#9AB18B] to-[#D0E0C1]",
             text: "text-[#1B1C17]",
             icon: "affirmationCat",
-            path: "/meditation",
+            path: "",
         },
     ];
 
