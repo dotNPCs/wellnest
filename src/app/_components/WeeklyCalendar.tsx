@@ -255,7 +255,7 @@ const WeeklyCalendar = () => {
                     </span>
                     <Image
                       src={moods[moodIndex]?.emoji ?? "/emojis/neutral.png"}
-                      alt={moods[moodIndex]?.label || "Mood Emoji"}
+                      alt={moods[moodIndex]?.label ?? "Mood Emoji"}
                       width={20}
                       height={20}
                     />
