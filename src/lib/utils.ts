@@ -1,10 +1,16 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { MealType } from "@prisma/client";
+import { formatInTimeZone } from "date-fns-tz";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
+
+export const getCurrentDateTime = () => {
+  const now = new Date();
+  return formatInTimeZone(now, "Asia/Singapore", "HH:mm d MMM yy");
+};
 
 // Meal configuration
 export const MEAL_CONFIG = {
