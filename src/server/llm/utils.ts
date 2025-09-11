@@ -7,6 +7,7 @@ export const tryParseToObject = (response: GenerateContentResponse) => {
       response_json = JSON.parse(response.text) as object;
     } else throw new Error("Response text is not a string");
   } catch (e) {
+    console.log(response.text);
     console.log("Error parsing JSON:", e);
     throw new Error("Failed to parse response to JSON");
   }
