@@ -26,17 +26,21 @@ const MealCheckinModal: React.FC<MealCheckinModalProps> = ({
   const { refetch } = usePet();
   const mealConfig = MEAL_CONFIG[mealType];
 
-  const updatePetMoodLog = api.llm.createPetMoodLogRecord.useMutation({});
-  const createCheckin = api.checkin.create.useMutation({
-    onSuccess: () => {
+  const updatePetMoodLog = api.llm.createPetMoodLogRecord.useMutation({
+    onSuccess: async () => {
+      refetch();
+
       setIsSubmitting(false);
       onSuccess();
       onClose();
       // Reset form
       setRating(3);
       setNotes("");
+    },
+  });
+  const createCheckin = api.checkin.create.useMutation({
+    onSuccess: () => {
       updatePetMoodLog.mutate();
-      refetch();
     },
     onError: (error: any) => {
       setIsSubmitting(false);

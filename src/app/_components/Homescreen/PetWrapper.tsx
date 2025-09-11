@@ -20,11 +20,13 @@ const PetWrapper = () => {
   const { data: session, status } = useSession();
   const router = useRouter();
 
+  const utils = api.useUtils();
   const { pet, isLoading, refetch } = usePet();
   const hasTriedCreateRef = useRef(false);
   const [showNewPetModal, setShowNewPetModal] = useState(false);
   const [showMoodStatus, setShowMoodStatus] = useState(false);
   const [currentDialogue, setCurrentDialogue] = useState<string>("");
+  const lastMoodLogIdRef = useRef<string | null>(null);
 
   // Auto-create pet mutation
   const createPetMutation = api.pet.createNewPet.useMutation({
@@ -63,14 +65,46 @@ const PetWrapper = () => {
 
   // Update current dialogue when pet data changes
   useEffect(() => {
-    if (pet?.moodLogs?.[0]?.dialogue) {
-      setCurrentDialogue(pet.moodLogs[0].dialogue);
-    }
-    if (!pet?.moodLogs?.[0]?.status) {
-      setShowMoodStatus(true);
+    if (pet?.moodLogs?.[0]) {
+      const latestMoodLog = pet.moodLogs[0];
+
+      // Check if this is a new mood log
+      if (latestMoodLog.id !== lastMoodLogIdRef.current) {
+        lastMoodLogIdRef.current = latestMoodLog.id;
+
+        // Update dialogue if it exists
+        if (latestMoodLog.dialogue) {
+          setCurrentDialogue(latestMoodLog.dialogue);
+        }
+
+        // Show mood status if no status exists or if this is a new log
+        if (!latestMoodLog.status) {
+          setShowMoodStatus(true);
+        }
+      }
     }
   }, [pet?.moodLogs]);
 
+  useEffect(() => {
+    if (pet?.moodLogs?.[0]) {
+      const latestMoodLog = pet.moodLogs[0];
+
+      // Check if this is a new mood log
+      if (latestMoodLog.id !== lastMoodLogIdRef.current) {
+        lastMoodLogIdRef.current = latestMoodLog.id;
+
+        // Update dialogue if it exists
+        if (latestMoodLog.dialogue) {
+          setCurrentDialogue(latestMoodLog.dialogue);
+        }
+
+        // Show mood status if no status exists or if this is a new log
+        if (!latestMoodLog.status) {
+          setShowMoodStatus(true);
+        }
+      }
+    }
+  }, [pet?.moodLogs]);
   // Function to get mood emoji based on status
   const getMoodEmoji = (status: string) => {
     if (status.toLowerCase().includes("happy")) return "/emojis/happy.png";
@@ -110,7 +144,7 @@ const PetWrapper = () => {
   };
 
   return (
-    <div className="relative flex h-[60dvh] w-full max-w-[768px] touch-none flex-col items-center justify-center overflow-hidden text-center text-white">
+    <div className="fixed flex h-[60dvh] w-full max-w-[768px] touch-none flex-col items-center justify-center overflow-hidden text-center text-white">
       {/* Pixel Background with Animations */}
       <div className="fixed top-4 left-4 z-10">
         <Dropdown />
