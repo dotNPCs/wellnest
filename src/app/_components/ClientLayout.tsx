@@ -21,12 +21,16 @@ export default function ClientLayout({ children }: ClientLayoutProps) {
   const [hasRun, setHasRun] = useState(false); // ✅ track if mutation has already run
   const router = useRouter();
 
+  const utils = api.useUtils();
+
   const {
     data: pet,
     isLoading: isPetLoading,
-    refetch,
+    refetch: originalRefetch,
   } = api.pet.getCurrentUserPet.useQuery(undefined, {
     enabled: status === "authenticated" && !!session?.user,
+    staleTime: 1000 * 30, // Consider data stale after 30 seconds
+    refetchOnWindowFocus: true,
   });
 
   const createPetMoodLogRecordMutation =
@@ -37,9 +41,21 @@ export default function ClientLayout({ children }: ClientLayoutProps) {
         console.error("Error updating pet mood log:", error);
       },
       onSuccess: async () => {
-        await refetch(); // ✅ refresh pet after update
+        await refetchWithInvalidation();
       },
     });
+
+  const refetchWithInvalidation = async () => {
+    try {
+      // Invalidate cache first to ensure fresh data
+      await utils.pet.getCurrentUserPet.invalidate();
+      // Then refetch to get fresh data immediately
+      return await originalRefetch();
+    } catch (error) {
+      console.error("Failed to invalidate and refetch pet data:", error);
+      throw error;
+    }
+  };
 
   // Redirect if unauthenticated
   useEffect(() => {
@@ -67,7 +83,7 @@ export default function ClientLayout({ children }: ClientLayoutProps) {
       value={{
         pet: pet ?? null,
         isLoading: isPetLoading || isUpdatingPetPersona,
-        refetch,
+        refetch: refetchWithInvalidation,
       }}
     >
       <SplashScreen loading={loading}>{children}</SplashScreen>

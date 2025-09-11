@@ -43,7 +43,14 @@ const DiaryInputDialog = ({
   );
 
   const { refetch } = usePet();
-  const updatePetMoodLog = api.llm.createPetMoodLogRecord.useMutation({});
+  const updatePetMoodLog = api.llm.createPetMoodLogRecord.useMutation({
+    onSuccess: () => {
+      refetch();
+    },
+    onError: (error) => {
+      console.error("Error updating pet mood log:", error);
+    },
+  });
 
   // Reset state when dialog opens/closes
   useEffect(() => {
@@ -64,7 +71,7 @@ const DiaryInputDialog = ({
     try {
       await onSave(currentDiaryText.trim(), moodValue);
       updatePetMoodLog.mutate();
-      refetch();
+
       onOpenChange(false);
     } catch (error) {
       console.error("Failed to save diary entry:", error);
