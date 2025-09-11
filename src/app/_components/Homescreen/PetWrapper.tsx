@@ -15,6 +15,7 @@ import PetSprite from "../Pixel/PetSprite";
 import SpriteDebugger from "../Pixel/PetDebugger";
 import { Dropdown } from "./DropdownMenu";
 import Image from "next/image";
+import { getCurrentDateTime } from "@/lib/utils";
 
 const PetWrapper = () => {
   const { data: session, status } = useSession();
@@ -28,6 +29,7 @@ const PetWrapper = () => {
   const [currentDialogue, setCurrentDialogue] = useState<string>("");
   const lastMoodLogIdRef = useRef<string | null>(null);
 
+  const currentTime = getCurrentDateTime();
   // Auto-create pet mutation
   const createPetMutation = api.pet.createNewPet.useMutation({
     onSuccess: () => {
@@ -39,7 +41,18 @@ const PetWrapper = () => {
     },
   });
 
-  const userCheckInToAppMutation = api.checkin.createCheckInToApp.useMutation();
+  const updatePersonaJson = api.llm.triggerPersonaUpdateWithInput.useMutation({
+    onError: (error) => {
+      console.error("Error updating pet persona:", error);
+    },
+  });
+  const userCheckInToAppMutation = api.checkin.createCheckInToApp.useMutation({
+    onSuccess: () => {
+      updatePersonaJson.mutate({
+        message: `The user just opened the app at ${currentTime}. Please update the pet's persona based on this information.`,
+      });
+    },
+  });
 
   useEffect(() => {
     if (status === "unauthenticated" || !session?.user) {

@@ -11,6 +11,8 @@ import {
 import { usePet } from "@/contexts/PetContext";
 import { api } from "@/trpc/react";
 import Image from "next/image";
+import { getCurrentDateTime } from "@/lib/utils";
+import { get } from "http";
 
 interface MoodOption {
   emoji: string;
@@ -43,6 +45,12 @@ const DiaryInputDialog = ({
   );
 
   const { refetch } = usePet();
+
+  const updatePersonaJson = api.llm.triggerPersonaUpdateWithInput.useMutation({
+    onSuccess: () => {
+      updatePetMoodLog.mutate();
+    },
+  });
   const updatePetMoodLog = api.llm.createPetMoodLogRecord.useMutation({
     onSuccess: () => {
       refetch();
@@ -69,8 +77,12 @@ const DiaryInputDialog = ({
         : undefined;
 
     try {
+      const currentTime = getCurrentDateTime();
+      console.log("Current Time:", currentTime);
       await onSave(currentDiaryText.trim(), moodValue);
-      updatePetMoodLog.mutate();
+      updatePersonaJson.mutate({
+        message: `The user just wrote a journal entry at ${currentTime}, describing their note as: "${currentDiaryText.trim()}". They indicated their mood as: "${moodValue ?? "not specified"}". Please update the pet's persona with this new information.`,
+      });
 
       onOpenChange(false);
     } catch (error) {

@@ -10,6 +10,8 @@ import { PetContext } from "@/contexts/PetContext";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 
+import { getCurrentDateTime } from "@/lib/utils";
+
 interface ClientLayoutProps {
   children: React.ReactNode;
 }
@@ -35,7 +37,6 @@ export default function ClientLayout({ children }: ClientLayoutProps) {
 
   const createPetMoodLogRecordMutation =
     api.llm.createPetMoodLogRecord.useMutation({
-      onMutate: () => setIsUpdatingPetPersona(true),
       onSettled: () => setIsUpdatingPetPersona(false),
       onError: (error) => {
         console.error("Error updating pet mood log:", error);
@@ -44,6 +45,16 @@ export default function ClientLayout({ children }: ClientLayoutProps) {
         await refetchWithInvalidation();
       },
     });
+
+  const updatePersonaJson = api.llm.triggerPersonaUpdateWithInput.useMutation({
+    onMutate: () => setIsUpdatingPetPersona(true),
+    onError: (error) => {
+      console.error("Error updating pet persona:", error);
+    },
+    onSuccess: async () => {
+      createPetMoodLogRecordMutation.mutate();
+    },
+  });
 
   const refetchWithInvalidation = async () => {
     try {
@@ -57,6 +68,8 @@ export default function ClientLayout({ children }: ClientLayoutProps) {
     }
   };
 
+  // Helper function to get current date and time in SGT
+
   // Redirect if unauthenticated
   useEffect(() => {
     if (status === "unauthenticated" || !session?.user) {
@@ -68,9 +81,13 @@ export default function ClientLayout({ children }: ClientLayoutProps) {
   useEffect(() => {
     if (!isPetLoading && pet && !hasRun) {
       setHasRun(true); // ✅ mark as run to prevent loops
-      createPetMoodLogRecordMutation.mutate();
+      const currentDateTime = getCurrentDateTime();
+
+      updatePersonaJson.mutate({
+        message: `Time has passed to: ${currentDateTime}`,
+      });
     }
-  }, [isPetLoading, pet, hasRun, createPetMoodLogRecordMutation]);
+  }, [isPetLoading, pet, hasRun, updatePersonaJson]);
 
   useEffect(() => {
     if (!isPetLoading) {

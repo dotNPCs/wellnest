@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import React, { useState } from "react";
-import { MEAL_CONFIG } from "@/lib/utils";
+import { getCurrentDateTime, MEAL_CONFIG } from "@/lib/utils";
 import { MealType } from "@prisma/client";
 import { api } from "@/trpc/react";
 import { usePet } from "@/contexts/PetContext";
@@ -26,6 +26,12 @@ const MealCheckinModal: React.FC<MealCheckinModalProps> = ({
   const { refetch } = usePet();
   const mealConfig = MEAL_CONFIG[mealType];
 
+  const updatePersonaJson = api.llm.triggerPersonaUpdateWithInput.useMutation({
+    onSuccess: () => {
+      updatePetMoodLog.mutate();
+    },
+  });
+
   const updatePetMoodLog = api.llm.createPetMoodLogRecord.useMutation({
     onSuccess: async () => {
       refetch();
@@ -40,7 +46,10 @@ const MealCheckinModal: React.FC<MealCheckinModalProps> = ({
   });
   const createCheckin = api.checkin.create.useMutation({
     onSuccess: () => {
-      updatePetMoodLog.mutate();
+      const currentTime = getCurrentDateTime();
+      updatePersonaJson.mutate({
+        message: `The user just logged a ${mealType} meal at ${currentTime} with a rating of ${rating} out of 5.${notes ? ` They added the following notes: "${notes}".` : ""} Please update the pet's persona based on this information.`,
+      });
     },
     onError: (error: any) => {
       setIsSubmitting(false);
