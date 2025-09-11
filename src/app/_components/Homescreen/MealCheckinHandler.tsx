@@ -23,8 +23,8 @@ interface MealCheckinHandlerProps {
 // Define meal time windows (24-hour format)
 const MEAL_WINDOWS = {
   breakfast: { start: 6, end: 11.5 }, // 6:00 AM - 10:00 AM
-  lunch: { start: 11.5, end: 15 }, // 11:30 AM - 2:00 PM
-  dinner: { start: 17.5, end: 21.5 }, // 5:30 PM - 8:30 PM
+  lunch: { start: 11.5, end: 16.5 }, // 11:30 AM - 2:00 PM
+  dinner: { start: 17.5, end: 23.5 }, // 5:30 PM - 8:30 PM
 };
 
 // Helper function to get current time as decimal hours (e.g., 13:30 = 13.5)
@@ -33,9 +33,6 @@ const getCurrentTimeHours = (): number => {
   return now.getHours() + now.getMinutes() / 60;
 };
 
-// Helper function to determine what should be shown based on time and completion status
-// Helper function to determine what should be shown based on time and completion status
-// Helper function to determine what should be shown based on time and completion status
 const getCurrentActiveMeal = (
   todayStatus: any,
 ): {
@@ -112,10 +109,6 @@ const getCurrentActiveMeal = (
   const mealKey = targetMeal.toLowerCase() as keyof typeof todayStatus;
   const isCompleted = todayStatus[mealKey] as boolean;
 
-  // Determine if the meal is actionable
-  // A meal is actionable if:
-  // 1. It's not completed, AND
-  // 2. We're currently in its window OR its window has passed (for late logging)
   const mealWindow = MEAL_WINDOWS[mealKey as keyof typeof MEAL_WINDOWS];
   const isActionable =
     !isCompleted && (isInActiveWindow || currentTime > mealWindow.end);
